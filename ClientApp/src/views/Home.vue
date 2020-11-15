@@ -1,18 +1,16 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+	<div class="home">yoo</div>
 </template>
 
-<script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue';
+<script lang="ts">
+import Vue from 'vue'
+import VueNativeSock from 'vue-native-websocket'
+import store from '@/store'
 
-export default {
-  name: 'Home',
-  components: {
-    HelloWorld,
-  },
-};
+export default Vue.extend({
+	name: 'Home',
+	created() {
+		Vue.use(VueNativeSock, 'ws://localhost:9090', { store })
+	},
+})
 </script>
