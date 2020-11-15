@@ -76,5 +76,7 @@ module.exports = {
 		'no-useless-escape': 'warn',
 		'import/newline-after-import': 'warn',
 		'object-shorthand': 'warn',
+		'no-multiple-empty-lines': 'warn',
+		'padded-blocks': 'warn',
 	},
 }

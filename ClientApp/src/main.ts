@@ -6,7 +6,7 @@ import store from './store'
 
 Vue.config.productionTip = false
 
-Vue.use(VueNativeSock, 'ws://localhost:9090', { store })
+// Vue.use(VueNativeSock, 'ws://localhost:9090', { store })
 
 new Vue({
 	router,
