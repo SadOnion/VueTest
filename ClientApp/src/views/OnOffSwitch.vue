@@ -1,7 +1,7 @@
 <template>
 	<div class="switch">
 		<div class="button">
-			<cv-button :kind="buttonKind" @click="buttonClick">{{
+			<cv-button :kind="on ? 'primary' : 'secondary'" @click="buttonClick">{{
 				on ? 'ON' : 'OFF'
 			}}</cv-button>
 		</div>
@@ -62,11 +62,6 @@ export default Vue.extend({
 			],
 			notification: 'Kenny has joined us in this war...',
 		}
-	},
-	computed: {
-		buttonKind() {
-			return (this as any).on ? 'primary' : 'secondary'
-		},
 	},
 	methods: {
 		buttonClick() {
