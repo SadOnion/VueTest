@@ -28,7 +28,7 @@ export default Vue.extend({
 		console.log('Starting Connection to Websocket')
 
 		// this.connection = new WebSocket('wss://echo.websocket.org')
-		this.connection = new WebSocket('ws://localhost:9090')
+		this.connection = new WebSocket('ws://localhost:5000/ws')
 
 		this.connection.addEventListener('open', e => {
 			console.log('Successfully connected')
