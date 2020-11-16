@@ -14,6 +14,15 @@
 				</li>
 			</ul>
 		</div>
+		<div class="notification-wrapper">
+			<cv-toast-notification
+				v-if="notification"
+				title="New Player!"
+				:caption="notification"
+				@close="notification = ''"
+				class="notification"
+			></cv-toast-notification>
+		</div>
 	</div>
 </template>
 
@@ -51,6 +60,7 @@ export default Vue.extend({
 					action: true,
 				},
 			],
+			notification: 'Kenny has joined us in this war...',
 		}
 	},
 	computed: {
@@ -105,6 +115,15 @@ export default Vue.extend({
 	}
 	.off {
 		color: $red-50;
+	}
+}
+.notification {
+	&-wrapper {
+		position: fixed;
+		top: 10vh;
+		width: 100vw;
+		display: flex;
+		justify-content: center;
 	}
 }
 </style>

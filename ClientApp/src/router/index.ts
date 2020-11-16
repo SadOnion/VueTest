@@ -6,7 +6,7 @@ Vue.use(VueRouter)
 const routes: Array<RouteConfig> = [
 	{
 		path: '/',
-		name: 'StairsSwitch',
+		name: 'Switch',
 		component: () => import('@/views/StairsSwitch.vue'),
 	},
 	{
