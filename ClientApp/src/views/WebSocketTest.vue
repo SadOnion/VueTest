@@ -1,8 +1,21 @@
 <template>
-	<div>
-		<button @click="sendMessage('hello world')">
-			Send Websocket Message
-		</button>
+	<div class="websocket-test">
+		<cv-form class="form" @submit.prevent="sendMessage">
+			<cv-text-area
+				class="text-area"
+				label="Message data content"
+				placeholder="Your message data"
+				v-model="data"
+			>
+			</cv-text-area>
+			<cv-button class="submit">Send Message</cv-button>
+		</cv-form>
+		<div class="response" v-if="response">
+			<label class="title bx--label">Last received message</label>
+			<p class="data">
+				{{ response }}
+			</p>
+		</div>
 	</div>
 </template>
 
@@ -13,12 +26,14 @@ export default Vue.extend({
 	name: 'WebSocketTest',
 	data() {
 		return {
+			data: '',
+			response: '',
 			connection: null as WebSocket | null,
 		}
 	},
 	methods: {
-		sendMessage(message: string) {
-			this.connection?.send(message)
+		sendMessage() {
+			this.connection?.send(this.data)
 		},
 	},
 	created() {
@@ -31,9 +46,10 @@ export default Vue.extend({
 			console.log(e)
 		})
 
-		this.connection.addEventListener('message', e => {
+		this.connection.addEventListener('message', ({ data }) => {
 			console.log('Received Message')
-			console.log(e)
+			console.log(data)
+			this.data = data
 		})
 
 		this.connection.addEventListener('close', e => {
@@ -43,3 +59,31 @@ export default Vue.extend({
 	},
 })
 </script>
+
+<style lang="scss" scoped>
+@import '@carbon/layout/scss/layout';
+@import '../styles/mixins';
+
+.websocket-test {
+	width: 100vw;
+	min-height: 100vh;
+	padding-top: 48px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+.text-area {
+	width: 40vmin;
+}
+.submit {
+	margin-top: $spacing-05;
+}
+.response {
+	margin-top: $spacing-10;
+	width: 40vmin;
+	.title {
+		margin-bottom: $spacing-03;
+	}
+}
+</style>

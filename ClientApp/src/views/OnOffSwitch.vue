@@ -30,7 +30,7 @@
 import Vue from 'vue'
 
 export default Vue.extend({
-	name: 'StairsSwitch',
+	name: 'OnOffSwitch',
 	data() {
 		return {
 			on: true,
@@ -65,7 +65,7 @@ export default Vue.extend({
 	},
 	computed: {
 		buttonKind() {
-			return this.on ? 'primary' : 'secondary'
+			return (this as any).on ? 'primary' : 'secondary'
 		},
 	},
 	methods: {
@@ -79,11 +79,10 @@ export default Vue.extend({
 <style lang="scss" scoped>
 @import '../styles/carbon/layout';
 @import '../styles/carbon/colors';
+@import '../styles/mixins';
 
 .switch {
-	height: 100vh;
-	width: 100vw;
-	padding-top: 48px;
+	@include full-view-page;
 	display: flex;
 }
 .button {

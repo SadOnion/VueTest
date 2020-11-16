@@ -7,11 +7,17 @@ const routes: Array<RouteConfig> = [
 	{
 		path: '/',
 		name: 'Switch',
-		component: () => import('@/views/StairsSwitch.vue'),
+		meta: {
+			title: 'On / Off Switch',
+		},
+		component: () => import('@/views/OnOffSwitch.vue'),
 	},
 	{
 		path: '/test',
 		name: 'WebSocketTest',
+		meta: {
+			title: 'WebSocket Test',
+		},
 		component: () => import('@/views/WebSocketTest.vue'),
 	},
 ]

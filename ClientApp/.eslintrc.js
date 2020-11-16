@@ -78,5 +78,6 @@ module.exports = {
 		'object-shorthand': 'warn',
 		'no-multiple-empty-lines': 'warn',
 		'padded-blocks': 'warn',
+		'no-mixed-operators': 'off',
 	},
 }

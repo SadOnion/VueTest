@@ -7,9 +7,9 @@
 		<cv-skip-to-content href="#main-content">
 			Skip to content
 		</cv-skip-to-content>
-		<cv-header-name to="/">Vue.NET Test</cv-header-name>
+		<cv-header-name>{{ pageTitle }}</cv-header-name>
 		<cv-header-nav aria-label="Carbon nav">
-			<cv-header-menu-item :to="{ name: 'StairsSwitch' }">
+			<cv-header-menu-item :to="{ name: 'Switch' }">
 				On / Off Switch
 			</cv-header-menu-item>
 			<cv-header-menu-item @click="link({ name: 'WebSocketTest' })">
@@ -50,8 +50,13 @@ import Vue from 'vue'
 
 export default Vue.extend({
 	name: 'Nav',
+	computed: {
+		pageTitle(): string {
+			return this.$route?.meta.title || 'Vue.NET Test'
+		},
+	},
 	methods: {
-		link(destination: Record<string, any> | string) {
+		link(destination: any): void {
 			if (
 				destination?.name === this.$route.name ||
 				destination === this.$route.path
