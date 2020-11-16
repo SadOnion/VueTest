@@ -1,21 +1,15 @@
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-import Vue from 'vue';
-import './plugins/axios';
-import vuetify from './plugins/vuetify';
-import App from './App.vue';
-import router from './router';
-import store from '@/store/index';
-import './registerServiceWorker';
-import dateFilter from '@/filters/date.filter';
+import Vue from 'vue'
+import VueNativeSock from 'vue-native-websocket'
+import App from './App.vue'
+import router from './router'
+import store from './store'
 
-Vue.config.productionTip = false;
+Vue.config.productionTip = false
 
-Vue.filter('date', dateFilter);
+// Vue.use(VueNativeSock, 'ws://localhost:5000/ws', { store })
 
 new Vue({
-  vuetify,
-  router,
-  store,
-  render: (h) => h(App),
-}).$mount('#app');
+	router,
+	store,
+	render: h => h(App),
+}).$mount('#app')
