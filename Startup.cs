@@ -1,10 +1,19 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SpaServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MyProject.Networking;
+using System;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using VueCliMiddleware;
+
+
 
 namespace MyProject
 {
@@ -46,6 +55,38 @@ namespace MyProject
                 app.UseHsts();
             }
 
+            var webSocketOptions = new WebSocketOptions()
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(120),
+                ReceiveBufferSize = 4 * 1024
+            };
+
+
+            app.UseWebSockets();
+
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path == "/ws")
+                {
+                    if (context.WebSockets.IsWebSocketRequest)
+                    {
+                        using (WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync())
+                        {
+                            await Echo(context, webSocket);
+                        }
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = 400;
+                    }
+                }
+                else
+                {
+                    await next();
+                }
+
+            });
+
             app.UseHttpsRedirection();
             
             app.UseStaticFiles();
@@ -76,6 +117,19 @@ namespace MyProject
             {
                 spa.Options.SourcePath = "ClientApp";
             });
+
+           
+        }
+
+        private async Task Echo(HttpContext context, WebSocket webSocket)
+        {
+            var buffer = new byte[1024 * 4];
+            
+            
+            await SocketMessage.SendMessage(webSocket, "Hurrrrra dzia³a !");
+                
+            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,"narazie to tyle", CancellationToken.None);
         }
     }
 }
+
