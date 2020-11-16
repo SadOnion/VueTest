@@ -1,15 +1,25 @@
 <template>
 	<div id="app">
+		<Nav />
 		<router-view />
 	</div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
+import Nav from '@/components/Nav.vue'
 
 export default Vue.extend({
 	name: 'App',
+	components: { Nav },
 })
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss">
+@import '@carbon/themes/scss/themes';
+// Use the gray 100 theme
+$carbon--theme: $carbon--theme--g100;
+@include carbon--theme();
+// import Carbon styles here
+@import 'carbon-components/scss/globals/scss/styles.scss';
+</style>

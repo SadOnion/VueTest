@@ -1,6 +1,5 @@
 <template>
-	<div class="home">
-		<div class="home">hello</div>
+	<div>
 		<button @click="sendMessage('hello world')">
 			Send Websocket Message
 		</button>
@@ -9,10 +8,9 @@
 
 <script lang="ts">
 import Vue from 'vue'
-// import store from '@/store'
 
 export default Vue.extend({
-	name: 'Home',
+	name: 'WebSocketTest',
 	data() {
 		return {
 			connection: null as WebSocket | null,
@@ -20,15 +18,13 @@ export default Vue.extend({
 	},
 	methods: {
 		sendMessage(message: string) {
-			console.log('connection:', this.connection)
 			this.connection?.send(message)
 		},
 	},
 	created() {
 		console.log('Starting Connection to Websocket')
 
-		// this.connection = new WebSocket('wss://echo.websocket.org')
-		this.connection = new WebSocket('ws://localhost:5000/ws')
+		this.connection = new WebSocket(process.env.VUE_APP_WEBSOCKET)
 
 		this.connection.addEventListener('open', e => {
 			console.log('Successfully connected')
@@ -39,9 +35,11 @@ export default Vue.extend({
 			console.log('Received Message')
 			console.log(e)
 		})
-	},
-	mounted() {
-		// console.log(store)
+
+		this.connection.addEventListener('close', e => {
+			console.log('Connection closed')
+			console.log(e)
+		})
 	},
 })
 </script>
