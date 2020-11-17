@@ -20,6 +20,14 @@ const routes: Array<RouteConfig> = [
 		},
 		component: () => import('@/views/WebSocketTest.vue'),
 	},
+	{
+		path: '/labyrinth-generator',
+		name: 'LabyrinthGenerator',
+		meta: {
+			title: 'Client Labyrinth Generator',
+		},
+		component: () => import('@/views/LabyrinthGenerator.vue'),
+	},
 ]
 
 const router = new VueRouter({
