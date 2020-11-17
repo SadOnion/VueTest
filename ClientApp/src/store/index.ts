@@ -10,45 +10,53 @@ interface SwitchLog {
 
 export default new Vuex.Store({
 	state: {
+		switch: {
+			logs: [] as SwitchLog[],
+			state: false,
+		},
 		socket: {
 			isConnected: false,
 			message: '',
 			reconnectError: false,
-			switchLogs: [] as SwitchLog[],
 		},
-		switchState: false,
+	},
+	getters: {
+		switchState: state => state.switch.state,
+		switchLogs: state => state.switch.logs,
 	},
 	mutations: {
 		SOCKET_ONOPEN(state, event) {
+			console.log('Websocket successfully connected')
 			Vue.prototype.$socket = event.currentTarget
 			state.socket.isConnected = true
 		},
-		SOCKET_ONCLOSE(state) {
-			console.log('Connection Closed')
+		SOCKET_ONCLOSE(state, event) {
+			console.log('Websocket connection closed')
 			state.socket.isConnected = false
+			console.log(event)
 		},
 		SOCKET_ONERROR(state, event) {
 			console.error(state, event)
 		},
-		// default handler called for all methods
 		SOCKET_ONMESSAGE(state, message) {
 			console.log('store received message:', message)
 
-			state.socket.message = message
+			state.socket.message =
+				typeof message === 'string' ? message : JSON.stringify(message)
 
-			if (message.Header === 'SwitchState') {
-				if (typeof message.state === 'boolean') {
-					state.switchState = message.state
-				}
-				state.socket.switchLogs.push({
+			if (typeof message === 'string') message = JSON.parse(message)
+			const { header, state: switchState } = message
+
+			if (header === 'SwitchState' && typeof switchState === 'boolean') {
+				state.switch.state = switchState
+				state.switch.logs.push({
 					name: 'Unknown',
-					state: message.State,
+					state: switchState,
 				})
 			}
 		},
-		// mutations for reconnect methods
 		SOCKET_RECONNECT(state, count) {
-			console.info(state, count)
+			console.info('Reconnecting... attempt:', count)
 		},
 		SOCKET_RECONNECT_ERROR(state) {
 			state.socket.reconnectError = true
@@ -56,7 +64,17 @@ export default new Vuex.Store({
 	},
 	actions: {
 		buttonSwitch({ state }) {
-			Vue.prototype.$socket.send(`${!state.switchState}`)
+			state.switch.state = !state.switch.state
+			Vue.prototype.$socket.send(`${state.switch.state}`)
+		},
+		sendMessage({ state }, message) {
+			if (!state.socket.isConnected) {
+				console.log(
+					"Couldn't send the message due to the connection being closed!",
+				)
+				return
+			}
+			Vue.prototype.$socket.send(message)
 		},
 	},
 })

@@ -10,10 +10,10 @@
 			</cv-text-area>
 			<cv-button class="submit">Send Message</cv-button>
 		</cv-form>
-		<div class="response" v-if="response">
+		<div class="response" v-if="socket.message">
 			<label class="title bx--label">Last received message</label>
 			<p class="data">
-				{{ response }}
+				{{ socket.message }}
 			</p>
 		</div>
 	</div>
@@ -21,45 +21,22 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mapState } from 'vuex'
 
 export default Vue.extend({
 	name: 'WebSocketTest',
 	data() {
 		return {
 			message: '',
-			response: '',
-			connection: null as WebSocket | null,
 		}
+	},
+	computed: {
+		...mapState(['socket']),
 	},
 	methods: {
 		sendMessage() {
-			this.connection?.send(this.message)
-			this.message = ''
+			this.$store.dispatch('sendMessage', this.message)
 		},
-	},
-	mounted() {
-		console.log('Starting Connection to Websocket')
-
-		this.connection = new WebSocket(process.env.VUE_APP_WEBSOCKET)
-
-		this.connection.addEventListener('open', e => {
-			console.log('Successfully connected')
-			console.log(e)
-		})
-
-		this.connection.addEventListener('message', ({ data }) => {
-			console.log('Received Message:', data)
-			this.response = data
-		})
-
-		this.connection.addEventListener('close', e => {
-			console.log('Connection closed')
-			console.log(e)
-		})
-	},
-	beforeDestroy() {
-		console.log(this.$route.name, 'Connection Close')
-		this.connection?.close()
 	},
 })
 </script>
