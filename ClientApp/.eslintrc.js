@@ -84,5 +84,8 @@ module.exports = {
 		'no-void': 'warn',
 		'no-restricted-syntax': 'warn',
 		'no-continue': 'warn',
+		'space-before-blocks': 'off',
+		'comma-spacing': 'warn',
+		'space-infix-ops': 'warn',
 	},
 }

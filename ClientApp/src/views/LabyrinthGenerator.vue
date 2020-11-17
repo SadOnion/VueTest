@@ -7,16 +7,26 @@
 					:key="y"
 					class="field"
 					:class="{
-						'wall-top': field.walls.includes(0),
-						'wall-right': field.walls.includes(1),
-						'wall-bottom': field.walls.includes(2),
-						'wall-left': field.walls.includes(3),
+						'wall-top': field.walls.has(0),
+						'wall-right': field.walls.has(1),
+						'wall-bottom': field.walls.has(2),
+						'wall-left': field.walls.has(3),
 					}"
 				>
 					<i></i>
 					<i></i>
 					<i></i>
 					<i></i>
+					<div class="y-info" v-if="x === 0">
+						<span>
+							{{ y }}
+						</span>
+					</div>
+					<div class="x-info" v-if="y === 0">
+						<span>
+							{{ x }}
+						</span>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -28,7 +38,7 @@ import Vue from 'vue'
 import { random } from '@/library/utilities'
 
 interface Field {
-	walls: number[]
+	walls: Set<number>
 	[key: string]: unknown
 }
 type FieldRow = Field[]
@@ -38,17 +48,31 @@ export default Vue.extend({
 	data() {
 		return {
 			fields: [] as FieldRow[],
-			width: 11,
-			height: 6,
+			width: 12,
+			height: 7,
 		}
 	},
 	created() {
+		// Fill the board with initial fields
 		for (let x = 0; x < this.width; x++) {
 			const row: FieldRow = []
 
 			for (let y = 0; y < this.height; y++) {
-				const walls = [0, 1, 2, 3]
-				walls.splice(random(0, 3), 1)
+				// For each field:
+				const walls = new Set([0, 3])
+				x === this.width - 1 && walls.add(1)
+				y === this.height - 1 && walls.add(2)
+
+				const breakable = new Set([0, 1, 2, 3])
+				if (x === 0) breakable.delete(3)
+				if (x === this.width - 1) breakable.delete(1)
+				if (y === 0) breakable.delete(0)
+				if (y === this.height - 1) breakable.delete(2)
+
+				walls.delete(
+					[...breakable][random(0, [...breakable].length, 'floor')],
+				)
+
 				row.push({
 					walls,
 				})
@@ -62,6 +86,7 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 @import '@carbon/colors/scss/colors';
+@import '@carbon/layout/scss/layout';
 @import '../styles/mixins';
 
 $field-size: 6vmin;
@@ -84,6 +109,7 @@ $wall-width: 1px;
 	width: $field-size;
 	height: $field-size;
 	background: $gray-90;
+
 	i {
 		position: absolute;
 		background: $white-0;
@@ -126,6 +152,23 @@ $wall-width: 1px;
 		&-left i:nth-of-type(4) {
 			opacity: 1;
 		}
+	}
+
+	.y-info {
+		position: absolute;
+		right: 100%;
+		margin-right: $spacing-05;
+		height: 100%;
+		display: flex;
+		align-items: center;
+	}
+	.x-info {
+		position: absolute;
+		bottom: 100%;
+		margin-bottom: $spacing-05;
+		width: 100%;
+		display: flex;
+		justify-content: center;
 	}
 }
 </style>
