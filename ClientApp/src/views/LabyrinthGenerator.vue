@@ -54,6 +54,8 @@ export default Vue.extend({
 	},
 	created() {
 		// Fill the board with initial fields
+		const nextLeft = new Set(),
+			nextTop = new Set()
 		for (let x = 0; x < this.width; x++) {
 			const row: FieldRow = []
 
@@ -69,9 +71,24 @@ export default Vue.extend({
 				if (y === 0) breakable.delete(0)
 				if (y === this.height - 1) breakable.delete(2)
 
-				walls.delete(
-					[...breakable][random(0, [...breakable].length, 'floor')],
-				)
+				const CoordsText = `${x},${y}`
+
+				if (nextLeft.has(CoordsText) && breakable.has(3)) {
+					walls.delete(3)
+					nextLeft.delete(CoordsText)
+				}
+				if (nextTop.has(CoordsText) && breakable.has(0)) {
+					walls.delete(0)
+					nextTop.delete(CoordsText)
+				}
+
+				const toDelete = [...breakable][
+					random(0, [...breakable].length, 'floor')
+				]
+
+				if (toDelete === 1) nextLeft.add(`${x + 1},${y}`)
+				else if (toDelete === 2) nextTop.add(`${x},${y + 1}`)
+				else walls.delete(toDelete)
 
 				row.push({
 					walls,
