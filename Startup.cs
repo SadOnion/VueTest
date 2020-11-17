@@ -141,7 +141,7 @@ namespace MyProject
                 await Task.Delay(250);
             }
 
-            await SocketMessage.SendMessage(webSocket, "{ \"Header\":\"Joined\"}");
+            await SocketMessage.SendJson(webSocket,new SwitchState(GlobalSwitch));
 
             bool valChange;
             var buffer = new byte[1024 * 4];
