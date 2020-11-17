@@ -18,7 +18,8 @@ namespace MyProject.Networking
         }
         public static async Task SendJson<T>(WebSocket socket, T obj)
         {
-            string json = JsonSerializer.Serialize(obj);
+            JsonSerializerOptions options = new JsonSerializerOptions() { PropertyNamingPolicy  = JsonNamingPolicy.CamelCase };
+            string json = JsonSerializer.Serialize(obj,options);
             await SendMessage(socket,json);
         }
 
