@@ -65,7 +65,7 @@ export default Vue.extend({
 		messageReceived(message: any) {
 			if (!message || typeof message !== 'object' || !('data' in message))
 				return
-			const { Header: header, State: state } = JSON.parse(message.data)
+			const { header, state } = JSON.parse(message.data)
 			if (header === 'SwitchState' && typeof state === 'boolean') {
 				this.on = state
 				this.logs.push({
