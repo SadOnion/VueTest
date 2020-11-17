@@ -43,14 +43,14 @@ export default new Vuex.Store({
 		SOCKET_ONERROR(state, event) {
 			console.error(state, event)
 		},
-		SOCKET_ONMESSAGE(state, message) {
-			console.log('store received message:', message)
+		SOCKET_ONMESSAGE(state, { data }) {
+			console.log('store received message:', data)
 
 			state.socket.message =
-				typeof message === 'string' ? message : JSON.stringify(message)
+				typeof data === 'string' ? data : JSON.stringify(data)
 
-			if (typeof message === 'string') message = JSON.parse(message)
-			const { header, state: switchState } = message
+			if (typeof data === 'string') data = JSON.parse(data)
+			const { header, state: switchState } = data
 
 			if (header === 'SwitchState' && typeof switchState === 'boolean') {
 				state.switch.state = switchState
@@ -91,7 +91,7 @@ export default new Vuex.Store({
 				)
 				return
 			}
-			state.socket.ws.send(message)
+			state.socket.ws.send(JSON.stringify(message))
 		},
 	},
 })
