@@ -6,13 +6,13 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 
-Vue.use(VueNativeSock, process.env.VUE_APP_WEBSOCKET, {
-	reconnection: true,
-	reconnectionAttempts: 5,
-	reconnectionDelay: 3000,
-	store,
-	format: 'json',
-})
+// Vue.use(VueNativeSock, process.env.VUE_APP_WEBSOCKET, {
+// 	reconnection: true,
+// 	reconnectionAttempts: 5,
+// 	reconnectionDelay: 3000,
+// 	store,
+// 	format: 'json',
+// })
 
 Vue.config.productionTip = false
 

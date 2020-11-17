@@ -15,6 +15,7 @@ export default new Vuex.Store({
 			state: false,
 		},
 		socket: {
+			ws: null as null | WebSocket,
 			isConnected: false,
 			message: '',
 			reconnectError: false,
@@ -25,6 +26,9 @@ export default new Vuex.Store({
 		switchLogs: state => state.switch.logs,
 	},
 	mutations: {
+		SET_SOCKET(state, ws: WebSocket) {
+			state.socket.ws = ws
+		},
 		SOCKET_ONOPEN(state, event) {
 			console.log('Websocket successfully connected')
 			Vue.prototype.$socket = event.currentTarget
@@ -32,8 +36,9 @@ export default new Vuex.Store({
 		},
 		SOCKET_ONCLOSE(state, event) {
 			console.log('Websocket connection closed')
+			const { ws } = state.socket
+			if (ws) ws.onclose = ws.onopen = ws.onmessage = null
 			state.socket.isConnected = false
-			console.log(event)
 		},
 		SOCKET_ONERROR(state, event) {
 			console.error(state, event)
@@ -63,18 +68,30 @@ export default new Vuex.Store({
 		},
 	},
 	actions: {
+		initWebSocket({ state, commit }) {
+			console.log('connecting...')
+			const ws = new WebSocket(process.env.VUE_APP_WEBSOCKET)
+
+			ws.onopen = e => commit('SOCKET_ONOPEN', e)
+			ws.onmessage = e => commit('SOCKET_ONMESSAGE', e)
+			ws.onclose = e => commit('SOCKET_ONCLOSE', e)
+
+			commit('SET_SOCKET', ws)
+		},
 		buttonSwitch({ state }) {
 			state.switch.state = !state.switch.state
-			Vue.prototype.$socket.send(`${state.switch.state}`)
+			if (state.socket.ws) {
+				state.socket.ws.send(`${state.switch.state}`)
+			}
 		},
 		sendMessage({ state }, message) {
-			if (!state.socket.isConnected) {
+			if (!state.socket.ws) {
 				console.log(
 					"Couldn't send the message due to the connection being closed!",
 				)
 				return
 			}
-			Vue.prototype.$socket.send(message)
+			state.socket.ws.send(message)
 		},
 	},
 })

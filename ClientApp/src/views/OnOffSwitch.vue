@@ -45,9 +45,7 @@ export default Vue.extend({
 	},
 	methods: {
 		buttonClick() {
-			;(this as any)?.$socket.send(`${!this.switch.state}`)
-
-			// this.$socket.dispatch('sendMessage', this.message)
+			this.$store.dispatch('buttonSwitch')
 		},
 	},
 })

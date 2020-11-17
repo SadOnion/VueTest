@@ -12,6 +12,9 @@ import Nav from '@/components/Nav.vue'
 export default Vue.extend({
 	name: 'App',
 	components: { Nav },
+	created() {
+		this.$store.dispatch('initWebSocket')
+	},
 })
 </script>
 
