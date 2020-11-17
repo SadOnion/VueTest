@@ -12,13 +12,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using VueCliMiddleware;
-
-
+using System.Collections.Generic;
+using MyProject.Models;
 
 namespace MyProject
 {
     public class Startup
     {
+        public static List<WebClient> Clients {get; private set;} = new List<WebClient>();
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -72,7 +74,8 @@ namespace MyProject
                     {
                         using (WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync())
                         {
-                            await Echo(context, webSocket);
+                            await NewConnection(context, webSocket);
+                            
                         }
                     }
                     else
@@ -121,14 +124,39 @@ namespace MyProject
            
         }
 
-        private async Task Echo(HttpContext context, WebSocket webSocket)
+        public bool GlobalSwitch {get; private set;}
+        private async Task SendNewSwitchState(bool state)
         {
+            foreach (var item in Clients)
+            {
+                SwitchState message = new SwitchState(state);
+                await SocketMessage.SendJson(item.Socket,message);
+            }
+        }
+        private async Task NewConnection(HttpContext context, WebSocket webSocket)
+        {
+            Clients.Add(new WebClient(webSocket));
+            while(Clients.Count <= 1)
+            {
+                await Task.Delay(250);
+            }
+
+            await SocketMessage.SendMessage(webSocket, "{ \"Header\":\"Joined\"}");
+
+            bool valChange;
             var buffer = new byte[1024 * 4];
-            
-            
-            await SocketMessage.SendMessage(webSocket, "Hurrrrra dzia³a !");
+            string result = await SocketMessage.ReciveMessage(webSocket);
+            while (result != "exit")
+            {
                 
-            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,"narazie to tyle", CancellationToken.None);
+                if (bool.TryParse(result, out valChange))
+                {
+                    await SendNewSwitchState(valChange);
+                }
+
+                result = await SocketMessage.ReciveMessage(webSocket);
+            }
+            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,"exit", CancellationToken.None);
         }
     }
 }

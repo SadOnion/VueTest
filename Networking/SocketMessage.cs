@@ -21,5 +21,12 @@ namespace MyProject.Networking
             string json = JsonSerializer.Serialize(obj);
             await SendMessage(socket,json);
         }
+
+        public static async Task<string> ReciveMessage(WebSocket socket)
+        {
+            byte[] buffer = new byte[1024 * 4];            
+            var result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer),CancellationToken.None);
+            return Encoding.UTF8.GetString(buffer);
+        }
     }
 }
