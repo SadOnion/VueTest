@@ -23,7 +23,7 @@
 import Vue from 'vue'
 
 export default Vue.extend({
-	name: 'WebSocketTest',
+	name: 'WebSocketTestCopy',
 	data() {
 		return {
 			message: '',

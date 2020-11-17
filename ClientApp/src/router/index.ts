@@ -20,6 +20,14 @@ const routes: Array<RouteConfig> = [
 		},
 		component: () => import('@/views/WebSocketTest.vue'),
 	},
+	{
+		path: '/test-copy',
+		name: 'WebSocketTestCopy',
+		meta: {
+			title: 'WebSocket Test Copy',
+		},
+		component: () => import('@/views/WebSocketTestCopy.vue'),
+	},
 ]
 
 const router = new VueRouter({

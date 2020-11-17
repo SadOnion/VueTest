@@ -9,7 +9,7 @@
 			<ul class="logs">
 				<h4 class="title">Logs</h4>
 				<li v-for="(log, index) in logs" :key="index">
-					{{ log.name }} <span class="on" v-if="log.action">enabled</span
+					{{ log.name }} <span class="on" v-if="log.state">enabled</span
 					><span class="off" v-else>disabled</span> the button.
 				</li>
 			</ul>
@@ -28,45 +28,61 @@
 
 <script lang="ts">
 import Vue from 'vue'
+// import { mapState } from 'vuex'
+// import VueNativeSock from 'vue-native-websocket'
+// import store from '@/store'
+// Vue.use(VueNativeSock, process.env.VUE_APP_WEBSOCKET, {
+// 	reconnection: true,
+// 	reconnectionAttempts: 5,
+// 	reconnectionDelay: 3000,
+// 	store,
+// 	format: 'json',
+// })
+
+interface Log {
+	name: string
+	state: boolean
+}
 
 export default Vue.extend({
 	name: 'OnOffSwitch',
 	data() {
 		return {
-			on: true,
-			logs: [
-				{
-					name: 'Kenny',
-					action: true,
-				},
-				{
-					name: 'Ben',
-					action: false,
-				},
-				{
-					name: 'Bob',
-					action: true,
-				},
-				{
-					name: 'Angry Pirate',
-					action: true,
-				},
-				{
-					name: 'Elizabeth',
-					action: false,
-				},
-				{
-					name: 'Johnny',
-					action: true,
-				},
-			],
+			on: false,
+			logs: [] as Log[],
 			notification: 'Kenny has joined us in this war...',
+			connection: null as WebSocket | null,
 		}
+	},
+	computed: {
+		// ...mapState(['socket', 'switchState']),
 	},
 	methods: {
 		buttonClick() {
 			this.on = !this.on
+			this.connection?.send(`${this.on}`)
 		},
+		messageReceived(message: any) {
+			if (!message || typeof message !== 'object' || !('data' in message))
+				return
+			const { Header: header, State: state } = JSON.parse(message.data)
+			if (header === 'SwitchState' && typeof state === 'boolean') {
+				this.on = state
+				this.logs.push({
+					name: 'unknown',
+					state,
+				})
+			}
+		},
+	},
+	mounted() {
+		this.connection = new WebSocket(process.env.VUE_APP_WEBSOCKET)
+
+		this.connection.addEventListener('message', this.messageReceived)
+	},
+	beforeDestroy() {
+		console.log(this.$route.name, 'Connection Close')
+		this.connection?.close()
 	},
 })
 </script>

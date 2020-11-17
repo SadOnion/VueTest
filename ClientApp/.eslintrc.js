@@ -79,5 +79,13 @@ module.exports = {
 		'no-multiple-empty-lines': 'warn',
 		'padded-blocks': 'warn',
 		'no-mixed-operators': 'off',
+		'@typescript-eslint/member-delimiter-style': 'off',
+		'@typescript-eslint/camelcase': 'warn',
+		'no-void': 'warn',
+		'no-restricted-syntax': 'warn',
+		'no-continue': 'warn',
+		'space-before-blocks': 'off',
+		'comma-spacing': 'warn',
+		'space-infix-ops': 'warn',
 	},
 }

@@ -15,6 +15,9 @@
 			<cv-header-menu-item @click="link({ name: 'WebSocketTest' })">
 				WebSocket Test
 			</cv-header-menu-item>
+			<cv-header-menu-item @click="link({ name: 'WebSocketTestCopy' })">
+				WebSocket Test Copy
+			</cv-header-menu-item>
 			<!-- <cv-header-menu aria-label="Link 4" title="Link 4">
 				<cv-header-menu-item href="javascript:void(0)">
 					Submenu Link 1
@@ -36,6 +39,11 @@
 						</cv-header-menu-item>
 						<cv-header-menu-item @click="link({ name: 'WebSocketTest' })">
 							WebSocket Test
+						</cv-header-menu-item>
+						<cv-header-menu-item
+							@click="link({ name: 'WebSocketTestCopy' })"
+						>
+							WebSocket Test Copy
 						</cv-header-menu-item>
 					</cv-header-side-nav-items>
 				</cv-side-nav-items>
