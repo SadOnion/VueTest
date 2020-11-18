@@ -1,14 +1,16 @@
 <template>
 	<div class="switch">
 		<div class="button">
-			<cv-button :kind="on ? 'primary' : 'secondary'" @click="buttonClick">{{
-				on ? 'ON' : 'OFF'
-			}}</cv-button>
+			<cv-button
+				:kind="switchState ? 'primary' : 'secondary'"
+				@click="buttonClick"
+				>{{ switchState ? 'ON' : 'OFF' }}</cv-button
+			>
 		</div>
 		<div class="logs-wrapper">
 			<ul class="logs">
 				<h4 class="title">Logs</h4>
-				<li v-for="(log, index) in logs" :key="index">
+				<li v-for="(log, index) in switchLogs" :key="index">
 					{{ log.name }} <span class="on" v-if="log.state">enabled</span
 					><span class="off" v-else>disabled</span> the button.
 				</li>
@@ -28,61 +30,23 @@
 
 <script lang="ts">
 import Vue from 'vue'
-// import { mapState } from 'vuex'
-// import VueNativeSock from 'vue-native-websocket'
-// import store from '@/store'
-// Vue.use(VueNativeSock, process.env.VUE_APP_WEBSOCKET, {
-// 	reconnection: true,
-// 	reconnectionAttempts: 5,
-// 	reconnectionDelay: 3000,
-// 	store,
-// 	format: 'json',
-// })
-
-interface Log {
-	name: string
-	state: boolean
-}
+import { mapState, mapGetters } from 'vuex'
 
 export default Vue.extend({
-	name: 'OnOffSwitch',
+	name: 'WebSocketTest',
 	data() {
 		return {
-			on: false,
-			logs: [] as Log[],
-			notification: 'Kenny has joined us in this war...',
-			connection: null as WebSocket | null,
+			notification: '',
 		}
 	},
 	computed: {
-		// ...mapState(['socket', 'switchState']),
+		...mapState(['switch']),
+		...mapGetters(['switchState', 'switchLogs']),
 	},
 	methods: {
 		buttonClick() {
-			this.on = !this.on
-			this.connection?.send(`${this.on}`)
+			this.$store.dispatch('buttonSwitch')
 		},
-		messageReceived(message: any) {
-			if (!message || typeof message !== 'object' || !('data' in message))
-				return
-			const { header, state } = JSON.parse(message.data)
-			if (header === 'SwitchState' && typeof state === 'boolean') {
-				this.on = state
-				this.logs.push({
-					name: 'unknown',
-					state,
-				})
-			}
-		},
-	},
-	mounted() {
-		this.connection = new WebSocket(process.env.VUE_APP_WEBSOCKET)
-
-		this.connection.addEventListener('message', this.messageReceived)
-	},
-	beforeDestroy() {
-		console.log(this.$route.name, 'Connection Close')
-		this.connection?.close()
 	},
 })
 </script>

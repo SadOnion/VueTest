@@ -87,5 +87,8 @@ module.exports = {
 		'space-before-blocks': 'off',
 		'comma-spacing': 'warn',
 		'space-infix-ops': 'warn',
+		'@typescript-eslint/no-this-alias': 'warn',
+		'semi-style': 'warn',
+		'no-multi-assign': 'off',
 	},
 }
