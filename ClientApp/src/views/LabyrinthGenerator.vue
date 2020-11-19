@@ -25,8 +25,6 @@
 						yellow: field.selected,
 						red: field.isClosed,
 					}"
-					@mouseenter="hover(x, y)"
-					@mouseleave="stopHover(x, y)"
 				>
 					<i></i>
 					<i></i>
@@ -53,55 +51,48 @@ import Vue from 'vue'
 import { random, wait } from '@/library/utilities'
 import { difference, union } from 'sets'
 
-interface Field {
+const encode = (...n: number[]) => n.join(','),
+	decode = (code: string): number[] => code.split(',').map(n => parseInt(n))
+
+class Field {
 	walls: Set<number>
 	safe: Set<number>
 	closed: Set<number>
 	selected: boolean
 	isClosed: boolean
-	[key: string]: unknown
+	x: number
+	y: number
+	code: string
+	constructor(x: number, y: number, walls: Set<number>) {
+		this.walls = walls
+		this.safe = new Set()
+		this.closed = new Set()
+		this.selected = false
+		this.isClosed = false
+		this.x = x
+		this.y = y
+		this.code = encode(x, y)
+	}
 }
-type FieldRow = Field[]
 
-const wallCode = (x: number, y: number, wall: 0 | 3): string =>
-	[x, y, wall].join(',')
+type FieldRow = Field[]
 
 export default Vue.extend({
 	name: 'LabyrinthGenerator',
 	data() {
 		return {
 			fields: [] as FieldRow[],
-			width: 12,
-			height: 7,
-			closedGroups: [] as Set<string>[],
+			width: 23,
+			height: 15,
+			closedSpaces: [] as Set<string>[],
 		}
 	},
 	methods: {
-		hover(x: number, y: number) {
-			const hoveredSet = this.closedGroups.find(set => set.has(`${x},${y}`))
-			if (!hoveredSet) return
-			;[...hoveredSet].forEach(code => {
-				const [a, b] = code.split(',').map(text => parseInt(text)),
-					field = this.fields[a]?.[b]
-
-				if (field) field.selected = true
-			})
-		},
-		stopHover(x: number, y: number) {
-			const hoveredSet = this.closedGroups.find(set => set.has(`${x},${y}`))
-			if (!hoveredSet) return
-			;[...hoveredSet].forEach(code => {
-				const [a, b] = code.split(',').map(text => parseInt(text)),
-					field = this.fields[a]?.[b]
-
-				if (field) field.selected = false
-			})
-		},
 		markWall(x: number, y: number, wall: number, mark: 'safe' | 'closed') {
 			this.fields[x]?.[y]?.[mark].add(wall)
 		},
 		markWallCode(code: string, mark: 'safe' | 'closed') {
-			const [x, y, wall] = code.split(',').map(item => parseInt(item, 10))
+			const [x, y, wall] = decode(code)
 			this.fields[x]?.[y]?.[mark].add(wall)
 		},
 		async followTheLine(
@@ -126,7 +117,7 @@ export default Vue.extend({
 
 				// has wall on the right?
 				if (fields[x + 1]?.[y]?.walls.has(3)) {
-					const code = wallCode(x + 1, y, 3)
+					const code = encode(x + 1, y, 3)
 					if (!allSeenWalls.has(code)) {
 						// Starting field has wall on the right
 						path.add(code)
@@ -141,7 +132,7 @@ export default Vue.extend({
 
 				// has wall on the bottom?
 				else if (fields[x]?.[y + 1]?.walls.has(0)) {
-					const code = wallCode(x, y + 1, 0)
+					const code = encode(x, y + 1, 0)
 					if (!allSeenWalls.has(code)) {
 						path.add(code)
 						allSeenWalls.add(code)
@@ -167,14 +158,23 @@ export default Vue.extend({
 					return
 			}
 		},
+		findClosedSpaces() {
+			this.closedSpaces = []
+			const { fields } = this
+			for (let x = 0; x < fields.length; x++) {
+				for (let y = 0; y < fields[x].length; y++) {
+					this.checkClosedField(x, y)
+				}
+			}
+		},
 		checkClosedField(x: number, y: number) {
-			const { fields, closedGroups } = this,
+			const { fields, closedSpaces } = this,
 				field = fields[x][y],
 				walls = new Set(field.walls),
-				fieldCode = `${x},${y}`,
+				fieldCode = encode(x, y),
 				addNewSet = () =>
-					closedGroups.find(set => set.has(`${x},${y}`)) ||
-					closedGroups.push(new Set([fieldCode]))
+					closedSpaces.find(set => set.has(fieldCode)) ||
+					closedSpaces.push(new Set([fieldCode]))
 
 			if (fields[x + 1]?.[y].walls.has(3)) walls.add(1)
 			if (fields[x][y + 1]?.walls.has(0)) walls.add(2)
@@ -182,25 +182,60 @@ export default Vue.extend({
 			const missingWalls = difference([0, 1, 2, 3], walls)
 
 			if (missingWalls.has(0) && missingWalls.has(3)) {
-				const toClear = closedGroups.find(set => set.has(`${x - 1},${y}`)),
-					index = closedGroups.findIndex(set => set.has(`${x},${y - 1}`))
+				const toClear = closedSpaces.find(set => set.has(`${x - 1},${y}`)),
+					index = closedSpaces.findIndex(set => set.has(`${x},${y - 1}`))
 
 				if (index === -1 || !toClear) return
 
-				closedGroups[index] = union(closedGroups[index], toClear).add(
+				closedSpaces[index] = union(closedSpaces[index], toClear).add(
 					fieldCode,
 				)
 				toClear.clear()
 			} else if (missingWalls.has(0) || missingWalls.has(3)) {
 				if (missingWalls.has(3))
-					closedGroups
+					closedSpaces
 						.find(set => set.has(`${x - 1},${y}`))
 						?.add(fieldCode)
 				else
-					closedGroups
+					closedSpaces
 						.find(set => set.has(`${x},${y - 1}`))
 						?.add(fieldCode)
 			} else addNewSet()
+		},
+		openClosedSpaces() {
+			const { closedSpaces, fields } = this
+			closedSpaces.forEach(set => {
+				if (set.size === 0) return
+
+				const canBeOpened: number[][] = []
+
+				if (typeof set[Symbol.iterator] !== 'function') return
+				;[...set].forEach(code => {
+					const [x, y] = decode(code)
+					if (fields[x]?.[y - 1] && !set.has(fields[x][y - 1].code)) {
+						// TOP
+						canBeOpened.push([x, y, 0])
+					}
+					if (fields[x - 1]?.[y] && !set.has(fields[x - 1][y].code)) {
+						// LEFT
+						canBeOpened.push([x, y, 3])
+					}
+					if (fields[x]?.[y + 1] && !set.has(fields[x][y + 1].code)) {
+						// BOTTOM
+						canBeOpened.push([x, y + 1, 0])
+					}
+					if (fields[x + 1]?.[y] && !set.has(fields[x + 1][y].code)) {
+						// RIGHT
+						canBeOpened.push([x + 1, y, 3])
+					}
+				})
+
+				if (canBeOpened.length === 0) return
+				const [x, y, wall] = canBeOpened[
+					random(0, canBeOpened.length, 'floor')
+				]
+				fields[x]?.[y]?.walls.delete(wall)
+			})
 		},
 	},
 	created() {
@@ -243,26 +278,29 @@ export default Vue.extend({
 				else if (toDelete === 2) nextTop.add([x, y + 1].join(','))
 				else walls.delete(toDelete)
 
-				row.push({
-					walls,
-					safe: new Set(),
-					closed: new Set(),
-					selected: false,
-					isClosed: false,
-				})
+				row.push(new Field(x, y, walls))
 			}
 
 			this.fields.push(row)
 		}
 
-		/**
-		 * Find closed spaces
-		 */
-		const { fields } = this
-		for (let x = 0; x < fields.length; x++) {
-			for (let y = 0; y < fields[x].length; y++) {
-				this.checkClosedField(x, y)
-			}
+		let nClosedSpaces = 0
+		while (nClosedSpaces !== 1) {
+			nClosedSpaces = 0
+			// await wait(1000)
+			/**
+			 * Find closed spaces
+			 */
+			this.findClosedSpaces()
+
+			/**
+			 * Open Closed Spaces
+			 */
+			this.openClosedSpaces()
+
+			this.closedSpaces.forEach(set => {
+				if (set.size > 0) nClosedSpaces++
+			})
 		}
 	},
 })
@@ -273,7 +311,7 @@ export default Vue.extend({
 @import '@carbon/layout/scss/layout';
 @import '../styles/mixins';
 
-$field-size: 6vmin;
+$field-size: 4vmin;
 $wall-width: 1px;
 
 .labyrinth-generator {

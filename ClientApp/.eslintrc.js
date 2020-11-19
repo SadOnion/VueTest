@@ -95,5 +95,6 @@ module.exports = {
 		'block-spacing': 'warn',
 		'brace-style': 'warn',
 		'keyword-spacing': 'warn',
+		'no-loop-func': 'warn',
 	},
 }
