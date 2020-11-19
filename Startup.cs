@@ -19,7 +19,6 @@ namespace MyProject
 {
     public class Startup
     {
-        public static List<WebClient> Clients {get; private set;} = new List<WebClient>();
 
         public Startup(IConfiguration configuration)
         {
@@ -41,6 +40,7 @@ namespace MyProject
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -66,29 +66,6 @@ namespace MyProject
 
             app.UseWebSockets();
 
-            app.Use(async (context, next) =>
-            {
-                if (context.Request.Path == "/ws")
-                {
-                    if (context.WebSockets.IsWebSocketRequest)
-                    {
-                        using (WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync())
-                        {
-                            await NewConnection(context, webSocket);
-                            
-                        }
-                    }
-                    else
-                    {
-                        context.Response.StatusCode = 400;
-                    }
-                }
-                else
-                {
-                    await next();
-                }
-
-            });
 
             app.UseHttpsRedirection();
             
@@ -114,6 +91,7 @@ namespace MyProject
 
                 // Add MapRazorPages if the app uses Razor Pages. Since Endpoint Routing includes support for many frameworks, adding Razor Pages is now opt -in.
                 endpoints.MapRazorPages();
+                endpoints.MapHub<ConnectionHub>("/net");
             });
 
             app.UseSpa(spa =>
@@ -122,41 +100,6 @@ namespace MyProject
             });
 
            
-        }
-
-        public bool GlobalSwitch {get; private set;}
-        private async Task SendNewSwitchState(bool state)
-        {
-            foreach (var item in Clients)
-            {
-                SwitchState message = new SwitchState(state);
-                await SocketMessage.SendJson(item.Socket,message);
-            }
-        }
-        private async Task NewConnection(HttpContext context, WebSocket webSocket)
-        {
-            Clients.Add(new WebClient(webSocket));
-            while(Clients.Count <= 1)
-            {
-                await Task.Delay(250);
-            }
-
-            await SocketMessage.SendJson(webSocket,new SwitchState(GlobalSwitch));
-
-            bool valChange;
-            var buffer = new byte[1024 * 4];
-            string result = await SocketMessage.ReciveMessage(webSocket);
-            while (result != "exit")
-            {
-                
-                if (bool.TryParse(result, out valChange))
-                {
-                    await SendNewSwitchState(valChange);
-                }
-
-                result = await SocketMessage.ReciveMessage(webSocket);
-            }
-            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,"exit", CancellationToken.None);
         }
     }
 }
