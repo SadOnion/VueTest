@@ -21,12 +21,12 @@ const routes: Array<RouteConfig> = [
 		component: () => import('@/views/WebSocketTest.vue'),
 	},
 	{
-		path: '/test-copy',
-		name: 'WebSocketTestCopy',
+		path: '/labyrinth-generator',
+		name: 'LabyrinthGenerator',
 		meta: {
-			title: 'WebSocket Test Copy',
+			title: 'Client Labyrinth Generator',
 		},
-		component: () => import('@/views/WebSocketTestCopy.vue'),
+		component: () => import('@/views/LabyrinthGenerator.vue'),
 	},
 ]
 

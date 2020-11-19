@@ -12,6 +12,7 @@
     "@carbon/vue": "^2.34.1",
     "carbon-components": "^10.24.0",
     "core-js": "^3.6.5",
+    "sets": "^0.2.0",
     "vue": "^2.6.11",
     "vue-native-websocket": "^2.0.14",
     "vue-router": "^3.2.0",

@@ -9,11 +9,12 @@
 		</cv-skip-to-content>
 		<cv-header-name>{{ pageTitle }}</cv-header-name>
 		<cv-header-nav aria-label="Carbon nav">
-			<cv-header-menu-item :to="{ name: 'Switch' }">
-				On / Off Switch
-			</cv-header-menu-item>
-			<cv-header-menu-item @click="link({ name: 'WebSocketTest' })">
-				WebSocket Test
+			<cv-header-menu-item
+				v-for="route in routes"
+				:key="route.name"
+				:to="route.path"
+			>
+				{{ route.meta.title || route.name }}
 			</cv-header-menu-item>
 			<cv-header-menu-item @click="link({ name: 'WebSocketTestCopy' })">
 				WebSocket Test Copy
@@ -34,11 +35,12 @@
 			<cv-side-nav id="side-nav" fixed>
 				<cv-side-nav-items>
 					<cv-header-side-nav-items>
-						<cv-header-menu-item @click="link({ name: 'Switch' })">
-							On / Off Switch
-						</cv-header-menu-item>
-						<cv-header-menu-item @click="link({ name: 'WebSocketTest' })">
-							WebSocket Test
+						<cv-header-menu-item
+							v-for="route in routes"
+							:key="route.name"
+							:to="route.path"
+						>
+							{{ route.meta.title || route.name }}
 						</cv-header-menu-item>
 						<cv-header-menu-item
 							@click="link({ name: 'WebSocketTestCopy' })"
@@ -61,6 +63,9 @@ export default Vue.extend({
 	computed: {
 		pageTitle(): string {
 			return this.$route?.meta.title || 'Vue.NET Test'
+		},
+		routes() {
+			return this.$router.options.routes
 		},
 	},
 	methods: {
