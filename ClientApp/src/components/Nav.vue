@@ -16,9 +16,6 @@
 			>
 				{{ route.meta.title || route.name }}
 			</cv-header-menu-item>
-			<cv-header-menu-item @click="link({ name: 'WebSocketTestCopy' })">
-				WebSocket Test Copy
-			</cv-header-menu-item>
 			<!-- <cv-header-menu aria-label="Link 4" title="Link 4">
 				<cv-header-menu-item href="javascript:void(0)">
 					Submenu Link 1
@@ -42,11 +39,6 @@
 						>
 							{{ route.meta.title || route.name }}
 						</cv-header-menu-item>
-						<cv-header-menu-item
-							@click="link({ name: 'WebSocketTestCopy' })"
-						>
-							WebSocket Test Copy
-						</cv-header-menu-item>
 					</cv-header-side-nav-items>
 				</cv-side-nav-items>
 			</cv-side-nav>
@@ -65,7 +57,7 @@ export default Vue.extend({
 			return this.$route?.meta.title || 'Vue.NET Test'
 		},
 		routes() {
-			return this.$router.options.routes
+			return this.$router.options.routes || []
 		},
 	},
 	methods: {
