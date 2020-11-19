@@ -95,69 +95,6 @@ export default Vue.extend({
 			const [x, y, wall] = decode(code)
 			this.fields[x]?.[y]?.[mark].add(wall)
 		},
-		async followTheLine(
-			startX: number,
-			startY: number,
-			allSeenWalls: Set<string>,
-		) {
-			const { fields } = this
-
-			if (fields[startX][startY].isClosed) return
-
-			const path: Set<string> = new Set(),
-				filedPath: number[][] = []
-
-			let wallType: 'v' | 'h' = 'v',
-				condition = true,
-				[x, y] = [startX, startY]
-
-			while (condition) {
-				console.log(x, y)
-				filedPath.push([x, y])
-
-				// has wall on the right?
-				if (fields[x + 1]?.[y]?.walls.has(3)) {
-					const code = encode(x + 1, y, 3)
-					if (!allSeenWalls.has(code)) {
-						// Starting field has wall on the right
-						path.add(code)
-						allSeenWalls.add(code)
-
-						// if LINE goes to the left
-						// if ()
-						// if LINE goes to the bottom
-						// if LINE goes to the right
-					}
-				}
-
-				// has wall on the bottom?
-				else if (fields[x]?.[y + 1]?.walls.has(0)) {
-					const code = encode(x, y + 1, 0)
-					if (!allSeenWalls.has(code)) {
-						path.add(code)
-						allSeenWalls.add(code)
-						wallType = 'h'
-					}
-				} else return
-				;[x, y] = wallType === 'v' ? [x, y + 1] : [x - 1, y]
-
-				if (
-					[undefined, true].includes(fields[x]?.[y]?.isClosed) &&
-					[undefined, true].includes(
-						fields[startX]?.[startY - 1]?.isClosed,
-					)
-				) {
-					// WE GOT CLOSED SPACE:
-					condition = false
-					filedPath.forEach(([a, b]) => {
-						fields[a][b].isClosed = true
-					})
-					;[...path].forEach(code => this.markWallCode(code, 'closed'))
-				}
-				if (x < 0 || x > this.width - 1 || y < 0 || y > this.height - 1)
-					return
-			}
-		},
 		findClosedSpaces() {
 			this.closedSpaces = []
 			const { fields } = this
