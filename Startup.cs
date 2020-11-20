@@ -41,6 +41,7 @@ namespace MyProject
                 configuration.RootPath = "ClientApp/dist";
             });
             services.AddSignalR();
+            services.AddCors();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,6 +49,7 @@ namespace MyProject
         {
             if (env.IsDevelopment())
             {
+                app.UseCors();
                 app.UseDeveloperExceptionPage();
             }
             else
@@ -56,12 +58,6 @@ namespace MyProject
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-
-            var webSocketOptions = new WebSocketOptions()
-            {
-                KeepAliveInterval = TimeSpan.FromSeconds(120),
-                ReceiveBufferSize = 4 * 1024
-            };
 
 
             app.UseWebSockets();
@@ -85,7 +81,7 @@ namespace MyProject
                     endpoints.MapToVueCliProxy(
                         "{*path}",
                         new SpaOptions { SourcePath = "ClientApp" },
-                        npmScript: "serve",
+                        npmScript: null,
                         regex: "Compiled successfully");
                 }
 
