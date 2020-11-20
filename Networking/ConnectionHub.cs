@@ -7,7 +7,7 @@ namespace MyProject
     {
         public override async Task OnConnectedAsync()
         {
-            await Clients.All.SendAsync("ReciveMessage","New Connection");
+            await Clients.All.SendAsync("messageReceived","Siema tutaj serwer wszystko pięknie działa");
         }
     }
 }

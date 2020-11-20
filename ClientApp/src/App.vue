@@ -17,7 +17,7 @@ export default Vue.extend({
 		// this.$store.dispatch('initWebSocket')
 
 		const connection = new signalR.HubConnectionBuilder()
-			.withUrl('http://localhost:5000/net')
+			.withUrl('/net')
 			.build()
 
 		connection.on('messageReceived', message => {
