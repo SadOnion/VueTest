@@ -4,21 +4,21 @@ import VueRouter, { RouteConfig } from 'vue-router'
 Vue.use(VueRouter)
 
 const routes: Array<RouteConfig> = [
+	// {
+	// 	path: '/',
+	// 	name: 'Switch',
+	// 	meta: {
+	// 		title: 'On / Off Switch',
+	// 	},
+	// 	component: () => import('@/views/OnOffSwitch.vue'),
+	// },
 	{
 		path: '/',
-		name: 'Switch',
+		name: 'SignalrTest',
 		meta: {
-			title: 'On / Off Switch',
+			title: 'SignalR Test',
 		},
-		component: () => import('@/views/OnOffSwitch.vue'),
-	},
-	{
-		path: '/test',
-		name: 'WebSocketTest',
-		meta: {
-			title: 'WebSocket Test',
-		},
-		component: () => import('@/views/WebSocketTest.vue'),
+		component: () => import('@/views/SignalrTest.vue'),
 	},
 	{
 		path: '/labyrinth-generator',
