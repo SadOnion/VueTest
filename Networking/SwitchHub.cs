@@ -43,7 +43,11 @@ namespace MyProject.Networking
         public async Task ChangeState(bool newState)
         {
             GlobalState = newState;
-            await Clients.Others.SendAsync("SwitchStateChanged",GlobalState,players[Context.ConnectionId]);
+            Console.WriteLine($"GlobalState is now {GlobalState}");
+            Console.WriteLine($"Client nickname is {players[Context.ConnectionId]}");
+            await Clients.All.SendAsync("switchStateChanged", true, "Server");
+            await Clients.All.SendAsync("switchStateChanged", true, "Server");
+            await Clients.Others.SendAsync("switchStateChanged",GlobalState,players[Context.ConnectionId]);
         }
     }
 }
