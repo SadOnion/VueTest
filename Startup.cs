@@ -46,7 +46,7 @@ namespace MyProject
             {
                 options.AddDefaultPolicy(builder =>
                 {
-                    builder.AllowAnyOrigin().AllowCredentials();
+                    builder.AllowAnyOrigin();
                 });
             }
             );
