@@ -4,21 +4,13 @@ import VueRouter, { RouteConfig } from 'vue-router'
 Vue.use(VueRouter)
 
 const routes: Array<RouteConfig> = [
-	// {
-	// 	path: '/',
-	// 	name: 'Switch',
-	// 	meta: {
-	// 		title: 'On / Off Switch',
-	// 	},
-	// 	component: () => import('@/views/OnOffSwitch.vue'),
-	// },
 	{
 		path: '/',
-		name: 'SignalrTest',
+		name: 'Switch',
 		meta: {
-			title: 'SignalR Test',
+			title: 'On / Off Switch',
 		},
-		component: () => import('@/views/SignalrTest.vue'),
+		component: () => import('@/views/OnOffSwitch.vue'),
 	},
 	{
 		path: '/labyrinth-generator',

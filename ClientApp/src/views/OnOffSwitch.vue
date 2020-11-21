@@ -2,15 +2,15 @@
 	<div class="switch">
 		<div class="button">
 			<cv-button
-				:kind="switchState ? 'primary' : 'secondary'"
+				:kind="state ? 'primary' : 'secondary'"
 				@click="buttonClick"
-				>{{ switchState ? 'ON' : 'OFF' }}</cv-button
+				>{{ state ? 'ON' : 'OFF' }}</cv-button
 			>
 		</div>
 		<div class="logs-wrapper">
 			<ul class="logs">
 				<h4 class="title">Logs</h4>
-				<li v-for="(log, index) in switchLogs" :key="index">
+				<li v-for="(log, index) in logs" :key="index">
 					{{ log.name }} <span class="on" v-if="log.state">enabled</span
 					><span class="off" v-else>disabled</span> the button.
 				</li>
@@ -30,22 +30,51 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { mapState, mapGetters } from 'vuex'
+// import { mapState, mapGetters } from 'vuex'
+
+interface SwitchLog {
+	name: string
+	state: boolean
+}
 
 export default Vue.extend({
 	name: 'WebSocketTest',
 	data() {
 		return {
 			notification: '',
+			state: false,
+			logs: [] as SwitchLog[],
 		}
 	},
 	computed: {
-		...mapState(['switch']),
-		...mapGetters(['switchState', 'switchLogs']),
+		// ...mapState(['switch']),
+		// ...mapGetters(['switchState', 'switchLogs']),
 	},
 	methods: {
 		buttonClick() {
-			this.$store.dispatch('buttonSwitch')
+			// this.$store.dispatch('buttonSwitch')
+		},
+	},
+	created() {
+		console.log(this.$socket)
+
+		this.$socket
+			.invoke('SetName', 'ziomek')
+			.then(console.log)
+			.catch(console.error)
+	},
+	sockets: {
+		initialData(data: any) {
+			console.log('initailData', data)
+		},
+		returnName(data: any) {
+			console.log('returnName', data)
+		},
+		playerJoined(data: any) {
+			console.log('playerJoined', data)
+		},
+		playerDisconnected(data: any) {
+			console.log('playerDisconnected', data)
 		},
 	},
 })
