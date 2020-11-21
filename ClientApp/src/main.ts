@@ -6,7 +6,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 
-Vue.use(VueSignalR, process.env.VUE_APP_SIGNALR_BASE || '' + '/switch')
+Vue.use(VueSignalR, (process.env.VUE_APP_SIGNALR_BASE || '') + '/switch')
 
 Vue.config.productionTip = false
 

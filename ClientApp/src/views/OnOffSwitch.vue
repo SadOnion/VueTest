@@ -30,6 +30,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+const goby = require('goby').init()
 // import { mapState, mapGetters } from 'vuex'
 
 interface SwitchLog {
@@ -41,6 +42,7 @@ export default Vue.extend({
 	name: 'WebSocketTest',
 	data() {
 		return {
+			name: goby.generate(['pre', 'suf']) as string,
 			notification: '',
 			state: false,
 			logs: [] as SwitchLog[],
@@ -52,29 +54,32 @@ export default Vue.extend({
 	},
 	methods: {
 		buttonClick() {
-			// this.$store.dispatch('buttonSwitch')
+			this.state = !this.state
+			this.$socket.send('changeState', this.state)
 		},
 	},
 	created() {
-		console.log(this.$socket)
-
-		this.$socket
-			.invoke('SetName', 'ziomek')
-			.then(console.log)
-			.catch(console.error)
+		this.$socket.send('setName', this.name)
 	},
 	sockets: {
 		initialData(data: any) {
-			console.log('initailData', data)
+			console.log('initialData', data)
 		},
-		returnName(data: any) {
-			console.log('returnName', data)
+		returnName(name: string) {
+			this.name = name
 		},
-		playerJoined(data: any) {
-			console.log('playerJoined', data)
+		playerJoined(name: string) {
+			this.notification = `${name} has joined us in this battle...`
 		},
 		playerDisconnected(data: any) {
 			console.log('playerDisconnected', data)
+		},
+		switchStateChanged(state: boolean, name: string) {
+			this.state = state
+			this.logs.push({
+				name,
+				state,
+			})
 		},
 	},
 })
