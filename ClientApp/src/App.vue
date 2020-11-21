@@ -8,23 +8,20 @@
 <script lang="ts">
 import Vue from 'vue'
 import Nav from '@/components/Nav.vue'
-import * as signalR from '@microsoft/signalr'
+// import * as signalR from '@microsoft/signalr'
 
 export default Vue.extend({
 	name: 'App',
 	components: { Nav },
 	created() {
-		// this.$store.dispatch('initWebSocket')
-
-		const connection = new signalR.HubConnectionBuilder()
-			.withUrl('/net')
-			.build()
-
-		connection.on('messageReceived', message => {
-			console.log(message)
-		})
-
-		connection.start().catch(console.error)
+		// // this.$store.dispatch('initWebSocket')
+		// const connection = new signalR.HubConnectionBuilder()
+		// 	.withUrl('/net')
+		// 	.build()
+		// connection.on('messageReceived', message => {
+		// 	console.log(message)
+		// })
+		// connection.start().catch(console.error)
 	},
 })
 </script>
