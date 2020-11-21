@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using VueCliMiddleware;
 using System.Collections.Generic;
 using MyProject.Models;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 
 namespace MyProject
 {
@@ -41,6 +42,14 @@ namespace MyProject
                 configuration.RootPath = "ClientApp/dist";
             });
             services.AddSignalR();
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyOrigin().AllowCredentials();
+                });
+            }
+            );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -64,7 +73,7 @@ namespace MyProject
             app.UseSpaStaticFiles();
 
             app.UseRouting();
-
+            app.UseCors();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
@@ -86,6 +95,7 @@ namespace MyProject
                 endpoints.MapHub<SwitchHub>("/switch");
             });
 
+            
             app.UseSpa(spa =>
             {
                 spa.Options.SourcePath = "ClientApp";
