@@ -1,21 +1,5 @@
 <template>
 	<div class="switch">
-		<div class="button">
-			<cv-button
-				:kind="state ? 'primary' : 'secondary'"
-				@click="buttonClick"
-				>{{ state ? 'ON' : 'OFF' }}</cv-button
-			>
-		</div>
-		<div class="logs-wrapper">
-			<ul class="logs">
-				<h4 class="title">Logs</h4>
-				<li v-for="(log, index) in logs" :key="index">
-					{{ log.name }} <span class="on" v-if="log.state">enabled</span
-					><span class="off" v-else>disabled</span> the button.
-				</li>
-			</ul>
-		</div>
 		<div class="notification-wrapper">
 			<cv-toast-notification
 				v-if="notification"
@@ -25,13 +9,42 @@
 				class="notification"
 			></cv-toast-notification>
 		</div>
+
+		<div class="button">
+			<cv-button
+				:kind="state ? 'primary' : 'secondary'"
+				@click="buttonClick"
+				>{{ state ? 'ON' : 'OFF' }}</cv-button
+			>
+		</div>
+
+		<div class="info-tabs-wrapper">
+			<cv-tabs aria-label="navigation tab label" class="info-tabs">
+				<cv-tab label="Logs" class="tab">
+					<cv-list class="logs">
+						<cv-list-item v-for="(log, index) in logs" :key="index"
+							>{{ log.name || 'Somebody' }}
+							<span class="on" v-if="log.state">enabled</span
+							><span class="off" v-else>disabled</span> the
+							button.</cv-list-item
+						>
+					</cv-list>
+				</cv-tab>
+				<cv-tab label="Players" class="tab">
+					<cv-list class="players">
+						<cv-list-item v-for="player in players" :key="player">{{
+							player
+						}}</cv-list-item>
+					</cv-list>
+				</cv-tab>
+			</cv-tabs>
+		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 const goby = require('goby').init()
-// import { mapState, mapGetters } from 'vuex'
 
 interface SwitchLog {
 	name: string
@@ -46,11 +59,8 @@ export default Vue.extend({
 			notification: '',
 			state: false,
 			logs: [] as SwitchLog[],
+			players: ['You'] as string[],
 		}
-	},
-	computed: {
-		// ...mapState(['switch']),
-		// ...mapGetters(['switchState', 'switchLogs']),
 	},
 	methods: {
 		buttonClick() {
@@ -62,17 +72,20 @@ export default Vue.extend({
 		this.$socket.send('setName', this.name)
 	},
 	sockets: {
-		initialData(data: any) {
-			console.log('initialData', data)
+		initialData(players: string[], state: boolean) {
+			this.players.push(...players)
+			this.state = state || false
 		},
 		returnName(name: string) {
 			this.name = name
 		},
 		playerJoined(name: string) {
 			this.notification = `${name} has joined us in this battle...`
+			this.players.push(name)
 		},
-		playerDisconnected(data: any) {
-			console.log('playerDisconnected', data)
+		playerDisconnected(name: string) {
+			const index = this.players.findIndex(player => player === name)
+			this.players.splice(index, 1)
 		},
 		switchStateChanged(state: boolean, name: string) {
 			this.state = state
@@ -100,7 +113,8 @@ export default Vue.extend({
 		width: 100px;
 	}
 }
-.logs {
+
+.info-tabs {
 	&-wrapper {
 		position: fixed;
 		top: calc(50% + 100px);
@@ -111,10 +125,17 @@ export default Vue.extend({
 		overflow: hidden;
 	}
 	margin: auto;
-	width: 60vmin;
-	> li {
-		margin-bottom: $spacing-02;
+	width: 60vmin !important;
+	.tab {
+		// background: $gray-90;
+		margin-top: $spacing-03;
 	}
+}
+
+.logs {
+	// > li {
+	// 	margin-bottom: $spacing-02;
+	// }
 	.title {
 		margin-bottom: $spacing-03;
 	}
