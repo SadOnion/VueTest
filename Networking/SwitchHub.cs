@@ -13,7 +13,7 @@ namespace MyProject.Networking
 
         public override async Task OnConnectedAsync()
         {
-            var playerList = players.SelectMany(x => x.Value).ToList();
+            var playerList = players.Select(x => x.Value).ToList();
             await Clients.Caller.SendAsync("initialData",playerList,GlobalState);
         }
         public override async Task OnDisconnectedAsync(Exception exception)
@@ -43,6 +43,7 @@ namespace MyProject.Networking
         public async Task ChangeState(bool newState)
         {
             GlobalState = newState;
+            Console.WriteLine($"Data Sent {GlobalState} {players[Context.ConnectionId]}");
             await Clients.Others.SendAsync("switchStateChanged",GlobalState,players[Context.ConnectionId]);
         }
     }
