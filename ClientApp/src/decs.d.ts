@@ -1,4 +1,5 @@
 declare module '@apavelm/vue-signalr'
 declare module '@carbon/vue/src/index'
 declare module 'sets'
-declare module '@/library/utilities'
+declare module '@/library/utilities.js'
+declare module 'vue-global-events'

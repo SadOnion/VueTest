@@ -44,7 +44,10 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import VueSignalR from '@apavelm/vue-signalr'
 const goby = require('goby').init()
+
+Vue.use(VueSignalR, `${process.env.VUE_APP_SIGNALR_BASE || ''}/switch`)
 
 interface SwitchLog {
 	name: string
@@ -69,7 +72,11 @@ export default Vue.extend({
 		},
 	},
 	created() {
-		this.$socket.send('setName', this.name)
+		this.$socket
+			.start({
+				log: process.env.NODE_ENV !== 'production', // Active only in development for debugging.
+			})
+			.send('setName', this.name)
 	},
 	sockets: {
 		initialData(players: string[], state: boolean) {

@@ -1,12 +1,12 @@
 import Vue from 'vue'
 import CarbonComponentsVue from '@carbon/vue/src/index'
-import VueSignalR from '@apavelm/vue-signalr'
+import GlobalEvents from 'vue-global-events'
 
 import App from './App.vue'
 import router from './router'
 import store from './store'
 
-Vue.use(VueSignalR, (process.env.VUE_APP_SIGNALR_BASE || '') + '/switch')
+Vue.component('GlobalEvents', GlobalEvents)
 
 Vue.config.productionTip = false
 
@@ -16,10 +16,4 @@ new Vue({
 	router,
 	store,
 	render: h => h(App),
-
-	created() {
-		this.$socket.start({
-			log: process.env.NODE_ENV !== 'production', // Active only in development for debugging.
-		})
-	},
 }).$mount('#app')

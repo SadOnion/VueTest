@@ -1,6 +1,6 @@
 <template>
 	<div class="labyrinth-generator">
-		<div class="board">
+		<div ref="board" class="board">
 			<div v-for="(row, x) in fields" :key="x" class="field-row">
 				<div
 					v-for="(field, y) in row"
@@ -42,13 +42,43 @@
 					</div>
 				</div>
 			</div>
+			<div class="resize" @mousedown.prevent="resizeDrag">
+				<svg
+					id="icon"
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 32 32"
+				>
+					<polygon
+						points="25 11 23.59 12.41 26.17 15 17 15 17 5.83 19.59 8.41 21 7 16 2 11 7 12.41 8.41 15 5.83 15 15 5.83 15 8.41 12.41 7 11 2 16 7 21 8.41 19.59 5.83 17 15 17 15 26.17 12.41 23.59 11 25 16 30 21 25 19.59 23.59 17 26.17 17 17 26.17 17 23.59 19.59 25 21 30 16 25 11"
+					/>
+				</svg>
+			</div>
 		</div>
+		<div class="resize-preview-wrapper">
+			<div
+				class="resize-preview"
+				:class="{ resizing }"
+				:style="{
+					'--resizeX': resizing ? resizeSize[0] : width,
+					'--resizeY': resizing ? resizeSize[1] : height,
+				}"
+			></div>
+		</div>
+		<GlobalEvents
+			v-if="resizing"
+			@mouseup="resize"
+			@mouseleave="resizing = false"
+			@mousemove.prevent="resizeDrag"
+		/>
 	</div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import { random, wait } from '@/library/utilities'
+// eslint-disable-next-line import/extensions
+import { random, wait } from '@/library/utilities.js'
+// eslint-disable-next-line import/extensions
+import { isInRange } from '@/library/utilities.ts'
 import { difference, union } from 'sets'
 
 const encode = (...n: number[]) => n.join(','),
@@ -60,21 +90,22 @@ class Field {
 	closed: Set<number>
 	selected: boolean
 	isClosed: boolean
+	isOpen: boolean
 	x: number
 	y: number
 	code: string
 	constructor(x: number, y: number, walls: Set<number>) {
-		this.walls = walls
+		this.walls = new Set([0, 3, ...walls])
 		this.safe = new Set()
 		this.closed = new Set()
 		this.selected = false
 		this.isClosed = false
+		this.isOpen = false
 		this.x = x
 		this.y = y
 		this.code = encode(x, y)
 	}
 }
-
 type FieldRow = Field[]
 
 export default Vue.extend({
@@ -82,12 +113,37 @@ export default Vue.extend({
 	data() {
 		return {
 			fields: [] as FieldRow[],
-			width: 23,
-			height: 15,
+			width: 19,
+			height: 12,
 			closedSpaces: [] as Set<string>[],
+			resizing: false,
+			resizeSize: [19, 12] as [number, number],
 		}
 	},
 	methods: {
+		resizeDrag(e: MouseEvent) {
+			if (!this.$refs.board) return
+			this.resizing = true
+
+			const { x, y } = e,
+				{ innerWidth: screenW, innerHeight: screenH } = window,
+				fieldSize =
+					(this.$refs.board as HTMLElement)
+						.querySelector('.field')
+						?.getBoundingClientRect().width || 40,
+				correctValue = (val: number) =>
+					Math.max(Math.ceil((val * 2 - 8) / fieldSize), 2)
+
+			const width = correctValue(x - screenW / 2),
+				height = correctValue(y - screenH / 2 - 24)
+
+			this.resizeSize = [width, height]
+		},
+		resize() {
+			this.resizing = false
+			;[this.width, this.height] = this.resizeSize
+			this.createMaze('extend')
+		},
 		markWall(x: number, y: number, wall: number, mark: 'safe' | 'closed') {
 			this.fields[x]?.[y]?.[mark].add(wall)
 		},
@@ -174,71 +230,118 @@ export default Vue.extend({
 				fields[x]?.[y]?.walls.delete(wall)
 			})
 		},
-	},
-	created() {
-		/**
-		 * Fill the board with initial fields
-		 */
-		const nextLeft = new Set(),
-			nextTop = new Set()
-		for (let x = 0; x < this.width; x++) {
-			const row: FieldRow = []
+		drillBoard() {
+			const { fields, width, height } = this
+			fields.forEach(row => row.forEach(breakWall))
 
-			for (let y = 0; y < this.height; y++) {
-				// For each field:
-				const walls = new Set([0, 3])
-				x === this.width - 1 && walls.add(1)
-				y === this.height - 1 && walls.add(2)
+			function breakWall(field: Field) {
+				const { x, y } = field,
+					walls = new Set(field.walls)
 
-				const breakable = new Set([0, 1, 2, 3])
-				if (x === 0) breakable.delete(3)
-				if (x === this.width - 1) breakable.delete(1)
-				if (y === 0) breakable.delete(0)
-				if (y === this.height - 1) breakable.delete(2)
+				if (x < width - 1) fields[x]?.[y]?.walls.delete(1)
+				if (y < height - 1) fields[x]?.[y]?.walls.delete(2)
+				if (field.isOpen) return
+				/**
+				 * Add information about all the walls surrounding the fiend (not only the top and left ones).
+				 * Plus removes walls that make the board border.
+				 */
+				if (fields[x + 1]?.[y].walls.has(3)) walls.add(1)
+				if (fields[x][y + 1]?.walls.has(0)) walls.add(2)
+				if (x === 0) walls.delete(3)
+				if (y === 0) walls.delete(0)
+				if (x === width - 1) walls.delete(1)
+				if (y === height - 1) walls.delete(2)
 
-				const coords = [x, y].join(',')
+				/**
+				 * Deletes random wall from the available set
+				 */
+				const toDelete = [...walls][random(0, walls.size, 'floor')]
 
-				if (nextLeft.has(coords) && breakable.has(3)) {
-					walls.delete(3)
-					nextLeft.delete(coords)
+				if ([0, 3].includes(toDelete)) field.walls.delete(toDelete)
+				else if (toDelete === 1) fields[x + 1][y].walls.delete(3)
+				else if (toDelete === 2) fields[x][y + 1].walls.delete(0)
+
+				field.isOpen = true
+			}
+		},
+		createMaze(
+			mode: 'init' | 'extend' | 'square' = 'init',
+			start: [number, number] = [0, 0],
+			end?: [number, number],
+		) {
+			const { fields, height, width } = this,
+				lastW = fields.length,
+				lastH = fields[0]?.length || 0
+
+			if (!end || ['init', 'extend'].includes(mode))
+				end = [width - 1, height - 1]
+			if (mode === 'init') this.fields = []
+			else if (mode === 'extend') {
+				if (end[0] < lastW) {
+					// eslint-disable-next-line prefer-destructuring
+					start[0] = end[0]
+					fields.splice(width)
+				} else start[0] = lastW
+				if (end[1] < lastH) {
+					// eslint-disable-next-line prefer-destructuring
+					start[1] = end[1]
+					fields.forEach(row => row.splice(height))
+				} else start[1] = lastH
+			} else if (mode === 'square') {
+				end[0] = Math.min(end[0], width - 1)
+				end[1] = Math.min(end[1], height - 1)
+			}
+			/**
+			 * Fill the board with initial fields
+			 */
+			for (let x = 0; x < width; x++) {
+				const row: FieldRow = mode === 'init' ? [] : fields[x] || []
+
+				for (let y = 0; y < height; y++) {
+					if (
+						mode === 'init' ||
+						(mode === 'square' &&
+							isInRange(x, start[0], end[0]) &&
+							isInRange(y, start[1], end[1])) ||
+						(mode === 'extend' &&
+							(isInRange(x, start[0], end[0]) ||
+								isInRange(y, start[1], end[1])))
+					) {
+						// For each field:
+						const walls = new Set([0, 3])
+						x === width - 1 && walls.add(1)
+						y === height - 1 && walls.add(2)
+
+						row.splice(y, 1, new Field(x, y, walls))
+					}
 				}
-				if (nextTop.has(coords) && breakable.has(0)) {
-					walls.delete(0)
-					nextTop.delete(coords)
-				}
 
-				const toDelete = [...breakable][
-					random(0, [...breakable].length, 'floor')
-				]
-
-				if (toDelete === 1) nextLeft.add([x + 1, y].join(','))
-				else if (toDelete === 2) nextTop.add([x, y + 1].join(','))
-				else walls.delete(toDelete)
-
-				row.push(new Field(x, y, walls))
+				this.fields.splice(x, 1, row)
 			}
 
-			this.fields.push(row)
-		}
+			this.drillBoard()
 
-		let nClosedSpaces = 0
-		while (nClosedSpaces !== 1) {
-			nClosedSpaces = 0
-			// await wait(1000)
-			/**
-			 * Find closed spaces
-			 */
-			this.findClosedSpaces()
+			let nClosedSpaces = 0
+			while (nClosedSpaces !== 1) {
+				/**
+				 * Find closed spaces
+				 */
+				this.findClosedSpaces()
 
-			/**
-			 * Open Closed Spaces
-			 */
-			this.openClosedSpaces()
+				/**
+				 * Open Closed Spaces
+				 */
+				this.openClosedSpaces()
 
-			this.closedSpaces.forEach(set => {
-				if (set.size > 0) nClosedSpaces++
-			})
-		}
+				nClosedSpaces = this.closedSpaces.reduce(
+					(n, set) => (set.size > 0 ? n + 1 : n),
+					0,
+				)
+			}
+		},
+	},
+	created() {
+		this.createMaze()
 	},
 })
 </script>
@@ -254,13 +357,16 @@ $wall-width: 1px;
 .labyrinth-generator {
 	@include full-view-page;
 	display: flex;
+	flex-direction: column;
 	justify-content: center;
 	align-items: center;
 }
 .board {
+	position: relative;
 	display: flex;
 	align-items: flex-start;
 }
+
 .field {
 	position: relative;
 	width: $field-size;
@@ -353,6 +459,7 @@ $wall-width: 1px;
 		height: 100%;
 		display: flex;
 		align-items: center;
+		user-select: none;
 	}
 	.x-info {
 		position: absolute;
@@ -361,6 +468,58 @@ $wall-width: 1px;
 		width: 100%;
 		display: flex;
 		justify-content: center;
+		user-select: none;
+	}
+}
+
+.resize {
+	$size: $layout-03;
+	position: absolute;
+	width: $size;
+	height: $size;
+	left: calc(100% - #{$size}/ 2);
+	top: calc(100% - #{$size}/ 2);
+	background: $blue-60;
+	// border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+
+	svg {
+		margin: auto;
+		width: $layout-02;
+		fill: $white-0;
+	}
+
+	transition: transform 0.2s ease-out;
+	&:hover {
+		transition: transform 0.1s;
+		transform: scale(1.2);
+	}
+}
+
+.resize-preview {
+	&-wrapper {
+		position: fixed;
+		pointer-events: none;
+		top: 0;
+		padding-top: 48px;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		display: flex;
+	}
+	margin: auto;
+	background-color: $blue-50;
+	opacity: 0;
+	// top: -$wall-width;
+	// left: 0;
+	width: calc(var(--resizeX, 0) * #{$field-size});
+	height: calc(var(--resizeY, 0) * #{$field-size} + #{$wall-width});
+
+	transition: opacity 0.2s, width 0.5s, height 0.5s;
+	&.resizing {
+		transition: opacity 0.2s, width 0.1s, height 0.1s;
+		opacity: 0.6;
 	}
 }
 </style>

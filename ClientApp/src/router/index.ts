@@ -20,14 +20,6 @@ const routes: Array<RouteConfig> = [
 		},
 		component: () => import('@/views/LabyrinthGenerator.vue'),
 	},
-	{
-		path: '/labyrinth-generator-alt',
-		name: 'LabyrinthGeneratorCopy',
-		meta: {
-			title: 'Client Labyrinth Generator Alternative',
-		},
-		component: () => import('@/views/LabyrinthGeneratorCopy.vue'),
-	},
 ]
 
 const router = new VueRouter({
