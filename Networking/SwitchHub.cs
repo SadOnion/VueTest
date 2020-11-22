@@ -8,8 +8,8 @@ namespace MyProject.Networking
 {
     public class SwitchHub : Hub
     {
-        private bool GlobalState = false;
-        private Dictionary<string,string> players = new Dictionary<string, string>();
+        private static bool GlobalState = false;
+        private static Dictionary<string,string> players = new Dictionary<string, string>();
 
         public override async Task OnConnectedAsync()
         {
@@ -43,10 +43,6 @@ namespace MyProject.Networking
         public async Task ChangeState(bool newState)
         {
             GlobalState = newState;
-            Console.WriteLine($"GlobalState is now {GlobalState}");
-            Console.WriteLine($"Client nickname is {players[Context.ConnectionId]}");
-            await Clients.All.SendAsync("switchStateChanged", true, "Server");
-            await Clients.All.SendAsync("switchStateChanged", true, "Server");
             await Clients.Others.SendAsync("switchStateChanged",GlobalState,players[Context.ConnectionId]);
         }
     }
