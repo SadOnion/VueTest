@@ -25,6 +25,8 @@
 						yellow: field.selected,
 						red: field.isClosed,
 					}"
+					@mousedown.prevent="selectStart(x, y)"
+					@mouseenter="selectDrag(x, y)"
 				>
 					<i></i>
 					<i></i>
@@ -53,6 +55,16 @@
 					/>
 				</svg>
 			</div>
+			<div
+				class="selection"
+				:class="{ selecting }"
+				:style="{
+					'--top': selectCssVars.top,
+					'--left': selectCssVars.left,
+					'--width': selectCssVars.width,
+					'--height': selectCssVars.height,
+				}"
+			></div>
 		</div>
 		<div class="resize-preview-wrapper">
 			<div
@@ -64,6 +76,11 @@
 				}"
 			></div>
 		</div>
+		<GlobalEvents
+			v-if="selecting"
+			@mouseup="selectEnd"
+			@mouseleave="selecting = false"
+		/>
 		<GlobalEvents
 			v-if="resizing"
 			@mouseup="resizeDrop"
@@ -118,9 +135,63 @@ export default Vue.extend({
 			closedSpaces: [] as Set<string>[],
 			resizing: false,
 			resizeSize: [19, 12] as [number, number],
+			selecting: false,
+			selectSquare: [
+				{ x: 0, y: 0 },
+				{ x: 0, y: 0 },
+			],
+			selectCssVars: {
+				top: 0,
+				left: 0,
+				width: 0,
+				height: 0,
+			},
 		}
 	},
 	methods: {
+		selectStart(x: number, y: number) {
+			this.selecting = true
+			this.selectSquare[0] = { x, y }
+			this.selectSquare[1] = { x, y }
+
+			this.selectSetCss()
+		},
+		selectEnd() {
+			if (!this.selecting) return
+			this.selecting = false
+
+			const [
+				{ x: startX, y: startY },
+				{ x: endX, y: endY },
+			] = this.selectSquare
+
+			this.createMaze('square', [startX, startY], [endX, endY])
+		},
+		selectDrag(x: number, y: number) {
+			if (!this.selecting) return
+			const { selectSquare } = this
+			selectSquare[1] = { x, y }
+
+			this.selectSetCss()
+		},
+		selectSetCss() {
+			const { selectSquare } = this,
+				{ abs, min } = Math,
+				width = abs(selectSquare[1].x - selectSquare[0].x) + 1,
+				height = abs(selectSquare[1].y - selectSquare[0].y) + 1
+			let top = min(selectSquare[0].y, selectSquare[1].y),
+				left = min(selectSquare[0].x, selectSquare[1].x)
+
+			top += (height - 1) / 2
+			left += (width - 1) / 2
+
+			this.selectCssVars = {
+				top,
+				left,
+				width,
+				height,
+			}
+		},
 		resizeDrag(e: MouseEvent) {
 			this.resizing = true
 
@@ -371,6 +442,7 @@ $wall-width: 1px;
 	width: $field-size;
 	height: $field-size;
 	background: $gray-90;
+	cursor: pointer;
 
 	&.yellow {
 		background: $yellow-50;
@@ -518,6 +590,33 @@ $wall-width: 1px;
 	transition: opacity 0.2s, width 0.5s, height 0.5s;
 	&.resizing {
 		transition: opacity 0.2s, width 0.1s, height 0.1s;
+		opacity: 0.6;
+	}
+}
+
+.selection {
+	pointer-events: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform: translate(
+			calc(var(--left, 0) * #{$field-size}),
+			calc(var(--top, 0) * #{$field-size})
+		)
+		scaleX(var(--width, 0)) scaleY(var(--height, 0));
+	width: $field-size;
+	height: $field-size;
+	// top: calc(var(--top, 0) * #{$field-size});
+	// left: calc(var(--left, 0) * #{$field-size});
+	// width: calc(var(--width, 0) * #{$field-size});
+	// height: calc(var(--height, 0) * #{$field-size});
+	background: $yellow-50;
+	opacity: 0;
+
+	transition: opacity 0.2s, transform 0.1s;
+	&.selecting {
+		transition: opacity 0.06s 0.14s, transform 0.1s;
+		// transition: opacity 0.2s, width 0.1s, height 0.1s, transform 0.1s;
 		opacity: 0.6;
 	}
 }
