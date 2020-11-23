@@ -66,7 +66,7 @@
 		</div>
 		<GlobalEvents
 			v-if="resizing"
-			@mouseup="resize"
+			@mouseup="resizeDrop"
 			@mouseleave="resizing = false"
 			@mousemove.prevent="resizeDrag"
 		/>
@@ -122,24 +122,23 @@ export default Vue.extend({
 	},
 	methods: {
 		resizeDrag(e: MouseEvent) {
-			if (!this.$refs.board) return
 			this.resizing = true
 
 			const { x, y } = e,
 				{ innerWidth: screenW, innerHeight: screenH } = window,
 				fieldSize =
-					(this.$refs.board as HTMLElement)
-						.querySelector('.field')
-						?.getBoundingClientRect().width || 40,
+					this.$el.querySelector('.field')?.getBoundingClientRect()
+						.width || 40,
+				{ max, abs, ceil } = Math,
 				correctValue = (val: number) =>
-					Math.max(Math.ceil((val * 2 - 8) / fieldSize), 2)
+					max(abs(ceil((val * 2 - 8) / fieldSize)), 2)
 
 			const width = correctValue(x - screenW / 2),
 				height = correctValue(y - screenH / 2 - 24)
 
 			this.resizeSize = [width, height]
 		},
-		resize() {
+		resizeDrop() {
 			this.resizing = false
 			;[this.width, this.height] = this.resizeSize
 			this.createMaze('extend')
