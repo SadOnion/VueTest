@@ -410,7 +410,7 @@ export default Vue.extend({
 @import '../styles/mixins';
 
 $field-size: 4vmin;
-$wall-width: 1px;
+$wall-width: 2px;
 
 .labyrinth-generator {
 	@include full-view-page;
@@ -442,6 +442,7 @@ $wall-width: 1px;
 
 	i {
 		position: absolute;
+		z-index: 10;
 		background: $white-0;
 		opacity: 0;
 		&:nth-of-type(1),
@@ -507,6 +508,7 @@ $wall-width: 1px;
 .buttons-frame {
 	$size: $layout-03;
 	position: absolute;
+	z-index: 20;
 	right: -$size / 2;
 	bottom: -$size / 2;
 	display: flex;
@@ -573,6 +575,7 @@ $wall-width: 1px;
 .resize-preview {
 	&-wrapper {
 		position: fixed;
+		z-index: 30;
 		pointer-events: none;
 		top: 0;
 		padding-top: 48px;
@@ -599,6 +602,7 @@ $wall-width: 1px;
 .selection {
 	pointer-events: none;
 	position: absolute;
+	z-index: 30;
 	top: 0;
 	left: 0;
 	transform: translate(
