@@ -1,5 +1,8 @@
 <template>
-	<div class="labyrinth-generator">
+	<div
+		class="labyrinth-generator"
+		:class="{ grabbing: resizing || selecting }"
+	>
 		<div ref="board" class="board">
 			<div v-for="(row, x) in fields" :key="x" class="field-row">
 				<div
@@ -11,19 +14,6 @@
 						'wall-right': field.walls.has(1),
 						'wall-bottom': field.walls.has(2),
 						'wall-left': field.walls.has(3),
-
-						'closed-top': field.closed.has(0),
-						'closed-right': field.closed.has(1),
-						'closed-bottom': field.closed.has(2),
-						'closed-left': field.closed.has(3),
-
-						'safe-top': field.safe.has(0),
-						'safe-right': field.safe.has(1),
-						'safe-bottom': field.safe.has(2),
-						'safe-left': field.safe.has(3),
-
-						yellow: field.selected,
-						red: field.isClosed,
 					}"
 					@mousedown.prevent="selectStart(x, y)"
 					@mouseenter="selectDrag(x, y)"
@@ -55,16 +45,18 @@
 					/>
 				</svg>
 			</div>
-			<div
-				class="selection"
-				:class="{ selecting }"
-				:style="{
-					'--top': selectCssVars.top,
-					'--left': selectCssVars.left,
-					'--width': selectCssVars.width,
-					'--height': selectCssVars.height,
-				}"
-			></div>
+			<transition name="fade" :duration="200">
+				<div
+					v-if="selecting"
+					class="selection"
+					:style="{
+						'--top': selectCssVars.top,
+						'--left': selectCssVars.left,
+						'--width': selectCssVars.width,
+						'--height': selectCssVars.height,
+					}"
+				></div>
+			</transition>
 		</div>
 		<div class="resize-preview-wrapper">
 			<div
@@ -103,33 +95,24 @@ const encode = (...n: number[]) => n.join(','),
 
 class Field {
 	walls: Set<number>
-	safe: Set<number>
-	closed: Set<number>
-	selected: boolean
-	isClosed: boolean
 	isOpen: boolean
 	x: number
 	y: number
 	code: string
 	constructor(x: number, y: number, walls: Set<number>) {
 		this.walls = new Set([0, 3, ...walls])
-		this.safe = new Set()
-		this.closed = new Set()
-		this.selected = false
-		this.isClosed = false
 		this.isOpen = false
 		this.x = x
 		this.y = y
 		this.code = encode(x, y)
 	}
 }
-type FieldRow = Field[]
 
 export default Vue.extend({
 	name: 'LabyrinthGenerator',
 	data() {
 		return {
-			fields: [] as FieldRow[],
+			fields: [] as Field[][],
 			width: 19,
 			height: 12,
 			closedSpaces: [] as Set<string>[],
@@ -213,13 +196,6 @@ export default Vue.extend({
 			this.resizing = false
 			;[this.width, this.height] = this.resizeSize
 			this.createMaze('extend')
-		},
-		markWall(x: number, y: number, wall: number, mark: 'safe' | 'closed') {
-			this.fields[x]?.[y]?.[mark].add(wall)
-		},
-		markWallCode(code: string, mark: 'safe' | 'closed') {
-			const [x, y, wall] = decode(code)
-			this.fields[x]?.[y]?.[mark].add(wall)
 		},
 		findClosedSpaces() {
 			this.closedSpaces = []
@@ -365,7 +341,7 @@ export default Vue.extend({
 			 * Fill the board with initial fields
 			 */
 			for (let x = 0; x < width; x++) {
-				const row: FieldRow = mode === 'init' ? [] : fields[x] || []
+				const row: Field[] = mode === 'init' ? [] : fields[x] || []
 
 				for (let y = 0; y < height; y++) {
 					if (
@@ -430,11 +406,20 @@ $wall-width: 1px;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
+	&.grabbing {
+		cursor: grabbing;
+		.field,
+		.resize {
+			cursor: grabbing;
+		}
+	}
 }
+
 .board {
 	position: relative;
 	display: flex;
 	align-items: flex-start;
+	cursor: pointer;
 }
 
 .field {
@@ -442,14 +427,6 @@ $wall-width: 1px;
 	width: $field-size;
 	height: $field-size;
 	background: $gray-90;
-	cursor: pointer;
-
-	&.yellow {
-		background: $yellow-50;
-	}
-	&.red {
-		background: $red-90;
-	}
 
 	i {
 		position: absolute;
@@ -494,34 +471,6 @@ $wall-width: 1px;
 			opacity: 1;
 		}
 	}
-	&.closed {
-		&-top i:nth-of-type(1) {
-			background: $red-50;
-		}
-		&-right i:nth-of-type(2) {
-			background: $red-50;
-		}
-		&-bottom i:nth-of-type(3) {
-			background: $red-50;
-		}
-		&-left i:nth-of-type(4) {
-			background: $red-50;
-		}
-	}
-	&.safe {
-		&-top i:nth-of-type(1) {
-			background: $green-50;
-		}
-		&-right i:nth-of-type(2) {
-			background: $green-50;
-		}
-		&-bottom i:nth-of-type(3) {
-			background: $green-50;
-		}
-		&-left i:nth-of-type(4) {
-			background: $green-50;
-		}
-	}
 
 	.y-info {
 		position: absolute;
@@ -552,7 +501,7 @@ $wall-width: 1px;
 	top: calc(100% - #{$size}/ 2);
 	background: $blue-60;
 	// border-radius: 50%;
-	cursor: pointer;
+	cursor: grab;
 	display: flex;
 
 	svg {
@@ -611,13 +560,16 @@ $wall-width: 1px;
 	// width: calc(var(--width, 0) * #{$field-size});
 	// height: calc(var(--height, 0) * #{$field-size});
 	background: $yellow-50;
-	opacity: 0;
+	opacity: 0.6;
+	transition: transform 0.1s;
+}
 
-	transition: opacity 0.2s, transform 0.1s;
-	&.selecting {
-		transition: opacity 0.06s 0.14s, transform 0.1s;
-		// transition: opacity 0.2s, width 0.1s, height 0.1s, transform 0.1s;
-		opacity: 0.6;
-	}
+.fade-enter-active,
+.fade-leave-active {
+	transition: transform 0.1s, opacity 0.2s;
+}
+.fade-enter,
+.fade-leave-to {
+	opacity: 0;
 }
 </style>
