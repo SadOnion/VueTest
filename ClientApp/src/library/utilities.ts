@@ -20,3 +20,13 @@ export const isInRange = (n: number, min: number, max: number, exc = false) => {
 	}
 	return exc ? n > min && n < max : n >= min && n <= max
 }
+
+// Linear Interpolation Function:
+// by using it, circle will move 20% of distance to cursor every frame
+// higher distance -> higher speed
+// lower distance -> lower speed
+export const lerp = (current: number, goal: number, p: number): number =>
+	(1 - p) * current + p * goal
+
+export const clamp = (value: number, min: number, max: number) =>
+	Math.min(Math.max(value, min), max)

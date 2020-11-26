@@ -20,6 +20,14 @@ const routes: Array<RouteConfig> = [
 		},
 		component: () => import('@/views/LabyrinthGenerator.vue'),
 	},
+	{
+		path: '/player-movement',
+		name: 'PlayerMovement',
+		meta: {
+			title: 'Player Movement',
+		},
+		component: () => import('@/views/PlayerMovement.vue'),
+	},
 ]
 
 const router = new VueRouter({

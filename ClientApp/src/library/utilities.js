@@ -1,5 +1,3 @@
-export const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
-
 export const flipP = p => (p >= 0 ? Math.abs(p - 1) : Math.abs(p) - 1)
 
 export const flipVal = (val, min, max) =>
@@ -29,12 +27,6 @@ export function valToPwMid(value, min, max, turn = pToVal(0.5, min, max)) {
 // function to map a value from one range to another range
 export const map = (value, in_min, in_max, out_min, out_max) =>
 	((value - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min
-
-// Linear Interpolation Function:
-// by using it, circle will move 20% of distance to cursor every frame
-// higher distance -> higher speed
-// lower distance -> lower speed
-export const lerp = (current, goal, p) => (1 - p) * current + p * goal
 
 export const random = (min, max, mathFunc = null) => {
 	const w = Math.random() * (max - min) + min

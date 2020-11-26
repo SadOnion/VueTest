@@ -98,5 +98,6 @@ module.exports = {
 		'keyword-spacing': 'warn',
 		'no-loop-func': 'warn',
 		'key-spacing': 'warn',
+		'no-floating-decimal': 'warn',
 	},
 }
