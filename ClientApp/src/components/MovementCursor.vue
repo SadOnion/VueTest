@@ -104,7 +104,7 @@ export default Vue.extend({
 				sin = Math.abs(vector[0]) / d
 				const radian = Math.asin(sin)
 
-				angle = radToDeg(radian)
+				angle = radToDeg(radian) || 0
 				force = clamp(
 					(d / Math.min(window.innerHeight, window.innerWidth)) * 3,
 					0,

@@ -42,9 +42,9 @@ export default Vue.extend({
 			const { angle, force, sin } = payload
 			this.angle = angle
 
-			const d = 200 * force
-			let x = sin * d,
-				y = (d ** 2 - x ** 2) ** (1 / 2)
+			const d = 200 * force || 0
+			let x = sin * d || 0,
+				y = (d ** 2 - x ** 2) ** (1 / 2) || 0
 
 			if (angle > 270) {
 				x *= -1
@@ -55,7 +55,9 @@ export default Vue.extend({
 			this.input = [x, y]
 		},
 		everyFrame() {
-			this.goal = this.input.map((n, i) => lerp(this.goal[i], n, 0.2)) as XY
+			this.goal = this.input.map(
+				(n, i) => lerp(this.goal[i], n, 0.2) || 0,
+			) as XY
 		},
 	},
 	mounted() {
