@@ -21,9 +21,9 @@ import paper from 'paper'
 // eslint-disable-next-line import/extensions
 import { lerp, radToDeg, clamp } from '@/library/utilities.ts'
 
-const mainColor = new paper.Color('#a8dadc')
+import { XY, MovementPayload } from '@/types'
 
-type XY = [number, number]
+const mainColor = new paper.Color('#a8dadc')
 
 export default Vue.extend({
 	name: 'MovementCursor',
@@ -39,9 +39,9 @@ export default Vue.extend({
 				ring: null as paper.Path.RegularPolygon | null,
 				line: null as paper.Path | null,
 			},
-			vector: [0, 0] as XY,
-			move: 0,
+			force: 0,
 			angle: 0,
+			sin: 0,
 		}
 	},
 	methods: {
@@ -96,35 +96,42 @@ export default Vue.extend({
 			this.visible = true
 		},
 		calcMovement() {
+			let { force, angle, sin } = this
 			if (this.dragging) {
-				const [x, y] = this.lerp
-				const vector = [x - this.stop[0], y - this.stop[1]],
-					d = (vector[0] ** 2 + vector[1] ** 2) ** (1 / 2),
-					radian = Math.asin(Math.abs(vector[0]) / d),
-					angle = radToDeg(radian),
-					move = clamp(
-						d / Math.min(window.innerHeight, window.innerWidth),
-						0,
-						1,
-					)
+				const [x, y] = this.lerp,
+					vector = [x - this.stop[0], y - this.stop[1]] as XY
+				const d = (vector[0] ** 2 + vector[1] ** 2) ** (1 / 2)
+				sin = Math.abs(vector[0]) / d
+				const radian = Math.asin(sin)
 
-				this.vector = vector
-				this.move = move
-				if (vector[0] > 0 && vector[1] >= 0) this.angle = 90 - angle + 90
-				else if (vector[0] <= 0 && vector[1] >= 0) this.angle = angle + 180
-				else if (vector[0] < 0 && vector[1] <= 0)
-					this.angle = 90 - angle + 270
-				else this.angle = angle
+				angle = radToDeg(radian)
+				force = clamp(
+					(d / Math.min(window.innerHeight, window.innerWidth)) * 3,
+					0,
+					1,
+				)
+
+				if (vector[0] > 0 && vector[1] >= 0) angle = 90 - angle + 90
+				else if (vector[0] <= 0 && vector[1] >= 0) angle += 180
+				else if (vector[0] < 0 && vector[1] <= 0) angle = 90 - angle + 270
 			} else {
 				const calcLerp = (last: number) =>
 					last > 0.01 ? lerp(last, 0, 0.3) : 0
-				this.move = calcLerp(this.move)
+				force = calcLerp(force)
 			}
 
-			this.$emit('movement', {
-				move: this.move,
-				angle: this.angle,
-			})
+			if (force !== this.force || angle !== this.angle) {
+				const payload: MovementPayload = {
+					force,
+					angle,
+					sin,
+				}
+				this.$emit('movement', payload)
+			}
+
+			this.force = force
+			this.angle = angle
+			this.sin = sin
 		},
 		handleMouseDown(e: MouseEvent) {
 			const { x, y } = e
@@ -136,12 +143,6 @@ export default Vue.extend({
 		this.initCanvas()
 
 		setInterval(this.calcMovement, 50)
-	},
-	watch: {
-		// lerp(a, b) {
-		// 	if (a[0] === b[0] && a[1] === b[1]) return
-		// 	this.calcMovement()
-		// },
 	},
 })
 
@@ -175,7 +176,6 @@ function createLine() {
 @import '@carbon/layout/scss/layout';
 @import '../styles/mixins';
 .movement-cursor {
-	@include full-view-page;
 	cursor: none;
 }
 .cursor {
@@ -183,7 +183,7 @@ function createLine() {
 	top: 0;
 	left: 0;
 	width: 100vw;
-	height: 100vw;
+	height: 100vh;
 	display: block;
 	opacity: 0;
 	&.visible {

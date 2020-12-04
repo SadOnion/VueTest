@@ -1,17 +1,26 @@
 <template>
 	<div class="player-movement">
-		<div class="player"></div>
+		<div class="player" :style="{ '--angle': angle + 'deg' }"></div>
 		<MovementCursor @movement="handlePlayerInput" />
 		<ul class="log">
-			<li>move: {{ move }}</li>
+			<li>force: {{ force }}</li>
 			<li>angle: {{ angle }}</li>
+			<li>sin: {{ sin }}</li>
+			<li>top: {{ top }}</li>
+			<li>left: {{ left }}</li>
 		</ul>
+		<div
+			class="goal-ball"
+			:style="{ '--x': left + 'px', '--y': top + 'px' }"
+		></div>
 	</div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import MovementCursor from '@/components/MovementCursor.vue'
+import { MovementPayload } from '@/types'
+
 export default Vue.extend({
 	name: 'PlayerMovement',
 	components: {
@@ -20,13 +29,31 @@ export default Vue.extend({
 	data() {
 		return {
 			angle: 0,
-			move: 0,
+			force: 0,
+			left: 0,
+			top: 0,
+			sin: 0,
 		}
 	},
 	methods: {
-		handlePlayerInput({ angle, move }) {
+		handlePlayerInput(payload: MovementPayload) {
+			const { angle, force, sin } = payload
 			this.angle = angle
-			this.move = move
+			this.force = force
+			this.sin = sin
+
+			let d = 200 * force,
+				x = sin * d,
+				y = (d ** 2 - x ** 2) ** (1 / 2)
+
+			if (angle > 270) {
+				x *= -1
+				y *= -1
+			} else if (angle > 180) x *= -1
+			else if (angle < 90) y *= -1
+
+			this.left = x
+			this.top = y
 		},
 	},
 })
@@ -39,12 +66,13 @@ export default Vue.extend({
 
 .player {
 	position: fixed;
-	left: 50%;
-	top: 50%;
+	left: calc(50% - #{$layout-03}/ 2);
+	top: calc(50% - #{$layout-04}/ 2);
 	width: $layout-03;
 	height: $layout-04;
 	background: $white-0;
 	clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+	transform: rotate(var(--angle, 0));
 }
 
 .log {
@@ -52,5 +80,17 @@ export default Vue.extend({
 	top: 48px + 20px;
 	left: 20px;
 	height: 100px;
+}
+
+.goal-ball {
+	position: fixed;
+	z-index: 1000;
+	top: calc(50% - 5px);
+	left: calc(50% - 5px);
+	width: 10px;
+	height: 10px;
+	background: red;
+	border-radius: 50%;
+	transform: translate(var(--x, 0), var(--y, 0));
 }
 </style>
