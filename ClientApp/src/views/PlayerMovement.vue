@@ -3,15 +3,17 @@
 		<div class="player" :style="{ '--angle': angle + 'deg' }"></div>
 		<MovementCursor @movement="handlePlayerInput" />
 		<ul class="log">
-			<li>force: {{ force }}</li>
 			<li>angle: {{ angle }}</li>
-			<li>sin: {{ sin }}</li>
-			<li>top: {{ top }}</li>
-			<li>left: {{ left }}</li>
+			<li>input: {{ input[0] }}; {{ input[1] }}</li>
+			<li>goal: {{ goal[0] }}; {{ goal[1] }}</li>
 		</ul>
 		<div
-			class="goal-ball"
-			:style="{ '--x': left + 'px', '--y': top + 'px' }"
+			class="goal-ball input"
+			:style="{ '--x': input[0] + 'px', '--y': input[1] + 'px' }"
+		></div>
+		<div
+			class="goal-ball goal"
+			:style="{ '--x': goal[0] + 'px', '--y': goal[1] + 'px' }"
 		></div>
 	</div>
 </template>
@@ -19,7 +21,9 @@
 <script lang="ts">
 import Vue from 'vue'
 import MovementCursor from '@/components/MovementCursor.vue'
-import { MovementPayload } from '@/types'
+import { XY, MovementPayload } from '@/types'
+// eslint-disable-next-line import/extensions
+import { lerp } from '@/library/utilities.ts'
 
 export default Vue.extend({
 	name: 'PlayerMovement',
@@ -29,21 +33,17 @@ export default Vue.extend({
 	data() {
 		return {
 			angle: 0,
-			force: 0,
-			left: 0,
-			top: 0,
-			sin: 0,
+			input: [0, 0] as XY,
+			goal: [0, 0] as XY,
 		}
 	},
 	methods: {
 		handlePlayerInput(payload: MovementPayload) {
 			const { angle, force, sin } = payload
 			this.angle = angle
-			this.force = force
-			this.sin = sin
 
-			let d = 200 * force,
-				x = sin * d,
+			const d = 200 * force
+			let x = sin * d,
 				y = (d ** 2 - x ** 2) ** (1 / 2)
 
 			if (angle > 270) {
@@ -52,9 +52,14 @@ export default Vue.extend({
 			} else if (angle > 180) x *= -1
 			else if (angle < 90) y *= -1
 
-			this.left = x
-			this.top = y
+			this.input = [x, y]
 		},
+		everyFrame() {
+			this.goal = this.input.map((n, i) => lerp(this.goal[i], n, 0.2)) as XY
+		},
+	},
+	mounted() {
+		setInterval(this.everyFrame, 16)
 	},
 })
 </script>
@@ -89,8 +94,14 @@ export default Vue.extend({
 	left: calc(50% - 5px);
 	width: 10px;
 	height: 10px;
-	background: red;
 	border-radius: 50%;
 	transform: translate(var(--x, 0), var(--y, 0));
+
+	&.input {
+		background: red;
+	}
+	&.goal {
+		background: greenyellow;
+	}
 }
 </style>
