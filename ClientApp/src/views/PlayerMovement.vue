@@ -34,8 +34,10 @@ import MovementCursor from '@/components/MovementCursor.vue'
 import { XY, MovementPayload } from '@/types'
 // eslint-disable-next-line import/extensions
 import { lerp, roundNumber } from '@/library/utilities.ts'
+import { stayInRange } from '@/library/utilities.js'
 
-let mouseInput: XY = [0, 0]
+let vectorInput: XY = [0, 0],
+	angleInput = 0
 
 export default Vue.extend({
 	name: 'PlayerMovement',
@@ -52,7 +54,7 @@ export default Vue.extend({
 	methods: {
 		handlePlayerInput(payload: MovementPayload) {
 			const { angle, force, sin } = payload
-			this.angle = angle
+			angleInput = angle
 
 			const d = 200 * force || 0
 			let x = sin * d || 0,
@@ -64,16 +66,34 @@ export default Vue.extend({
 			} else if (angle > 180) x *= -1
 			else if (angle < 90) y *= -1
 
-			mouseInput = [x, y]
+			vectorInput = [x, y]
 		},
 		everyFrame() {
-			this.goalVector = mouseInput.map((n, i) =>
-				round(this.goalVector[i], n, 0.2),
+			// Smoothing the relative goal vector towards input value
+			this.goalVector = vectorInput.map((n, i) =>
+				smooth(this.goalVector[i], n, 0.2),
 			) as XY
 
+			// Smoothing the global player position towards position + vector
 			this.pos = this.pos.map((current, i) =>
-				round(current, current + this.goalVector[i], 0.1),
+				smooth(current, current + this.goalVector[i], 0.05),
 			) as XY
+
+			// Smoothing player angle towards input angle
+			if (Math.abs(angleInput - this.angle) < 180)
+				this.angle = smooth(this.angle, angleInput, 0.1)
+			else {
+				/**
+				 * Handling the exception when the shortest road,
+				 * from current angle to the goal angle,
+				 * leads through the 0 / 360 deg breakpoint.
+				 */
+				this.angle =
+					this.angle > angleInput
+						? smooth(this.angle, angleInput + 360, 0.1)
+						: smooth(this.angle + 360, angleInput, 0.1) - 360
+				this.angle = stayInRange(this.angle, 0, 360, 'loop')
+			}
 		},
 		positionInMiddle() {
 			const { innerWidth: vw, innerHeight: vh } = window
@@ -82,11 +102,14 @@ export default Vue.extend({
 	},
 	mounted() {
 		this.positionInMiddle()
+		/** Interval EVERY FRAME
+		 * 16 -> 60 fps
+		 */
 		setInterval(this.everyFrame, 16)
 	},
 })
 
-function round(n: number, goal: number, p: number) {
+function smooth(n: number, goal: number, p: number) {
 	const delayedNum = roundNumber(lerp(n, goal, p), 2) || 0
 	return Math.abs(delayedNum) > 0.2 ? delayedNum : 0
 }
