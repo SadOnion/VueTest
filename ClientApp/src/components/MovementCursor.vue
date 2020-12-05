@@ -106,7 +106,7 @@ export default Vue.extend({
 
 				angle = radToDeg(radian) || 0
 				force = clamp(
-					(d / Math.min(window.innerHeight, window.innerWidth)) * 3,
+					(d / Math.min(window.innerHeight, window.innerWidth)) * 4,
 					0,
 					1,
 				)

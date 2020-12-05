@@ -32,3 +32,20 @@ export const clamp = (value: number, min: number, max: number) =>
 	Math.min(Math.max(value, min), max)
 
 export const radToDeg = (rad: number) => rad * (180 / Math.PI)
+
+export function roundNumber(num: number, scale: number) {
+	if (!('' + num).includes('e')) {
+		return +(Math.round(parseFloat(num + 'e+' + scale)) + 'e-' + scale)
+	} else {
+		var arr = ('' + num).split('e')
+		var sig = ''
+		if (+arr[1] + scale > 0) {
+			sig = '+'
+		}
+		return +(
+			Math.round(parseFloat(+arr[0] + 'e' + sig + (+arr[1] + scale))) +
+			'e-' +
+			scale
+		)
+	}
+}
